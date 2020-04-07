@@ -232,6 +232,60 @@ def smaller(u, v):
     else:
         return False
 
+# join two trees with the correct InOrder based on their priority
+def join(t1, t2, dummy):
+
+    if not t1 or not t2:
+        if t1:
+            return t1
+        elif t2:
+            return t2
+        else:
+            return None
+
+    # make dummy the root of both trees
+    dummy.parent = None
+    dummy.child[LEFT] = t1
+    dummy.child[RIGHT] = t2
+
+    t1.parent = dummy
+    t2.parent = dummy
+
+    #add later for weighted randomized trees
+    #dummy.init() or we can call this something else
+
+    # rotate dummy down until it is a leaf
+    while dummy.child[LEFT] or dummy.child[RIGHT]:
+        # to preserve in order we rotate with the node down
+        larger = None
+        left = dummy.child[LEFT]
+        right = dummy.child[RIGHT]
+        # check if right child exists
+        if right:
+            # check that left child exists
+            if left:
+                if right.priority > left.priority:
+                    larger = right
+                else:
+                    larger = left
+            else:
+                larger = right
+        # no right child so default to left
+        else:
+            larger = left
+
+        # Now that we have found larger child, we rotate it with dummy
+        rotate(larger, dummy)
+
+    # remove dummy from tree
+    dummy.isolate()
+
+    #if t1, which is root of t1, does have parent then t2 is the root
+    if t1.parent:
+        return t2
+    else:
+        return t1
+
 #starting at our start_node, return two trees either split starting from the LEFT or RIGHT of this node
 def split(start_node, direction, dummy):
     if not start_node:
@@ -299,16 +353,30 @@ def split(start_node, direction, dummy):
     t1 = dummy.child[LEFT]
     t2 = dummy.child[RIGHT]
     return t1, t2
-# pre order traversal of node
-def print_tree(start_node):
-    _print_tree(start_node)
-    print("")
 
-def _print_tree(start_node):
-    if start_node:
-        print(start_node, end=" ")
-        _print_tree(start_node.child[LEFT])
-        _print_tree(start_node.child[RIGHT])
+# for level order traversal
+def height(root):
+    if not root:
+        return 0
+
+    return 1 + max(height(root.child[LEFT]), height(root.child[RIGHT]))
+
+# levelorder traversal from root
+def print_tree(root):
+    h = height(root)
+    for i in range(1,  h+ 1):
+        _print_tree(root, i)
+        print("")
+
+def _print_tree(root, level):
+    if not root:
+
+        return root
+    if level == 1:
+        print(root, end = ' ')
+    elif level > 1:
+        _print_tree(root.child[LEFT], level - 1)
+        _print_tree(root.child[RIGHT], level - 1)
 ########################################################################################
 
 
@@ -318,7 +386,7 @@ class BBNodeWithVal(BBTree):
         super().__init__()
         self.val = val
     def __repr__(self):
-        return str(self.val)
+        return "(" + str(self.val) + ", " + str(self.priority)[:5] + ")"
 
 
 
@@ -380,6 +448,20 @@ def test1():
     print_tree(t1)
     print_tree(t2)
 
+def test2():
+    b0 = BBNodeWithVal(0)
+    b1 = BBNodeWithVal(1)
+
+    t = join(b0, b1, BBTree())
+
+
+    for i in range(2, 100000):
+        t = join(t, BBNodeWithVal(i), BBTree())
+
+    print(height(t))
+    #print_tree(t)
+
+
 if __name__ == "__main__":
-    test1()
+    test2()
     print("Done")
