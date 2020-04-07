@@ -18,7 +18,7 @@ class BBTree:
         leftMost = None
         #current node in traversal
         cur = self
-        while cur.child[LEFT] != None:
+        while cur.child[LEFT]:
             cur = cur.child[LEFT]
             leftMost = cur
         return leftMost
@@ -28,7 +28,7 @@ class BBTree:
         rightMost = None
         #current node in traversal
         cur = self
-        while cur.child[RIGHT] != None:
+        while cur.child[RIGHT]:
             cur = cur.child[RIGHT]
             rightMost = cur
         return rightMost
@@ -36,7 +36,7 @@ class BBTree:
     # follow parent up the tree as long as possible
     def find_root(self):
         root = self
-        while root.parent != None:
+        while root.parent:
             root = root.parent
         return root
 
@@ -56,11 +56,88 @@ class BBTree:
         if self.child[RIGHT]:
             self.child[RIGHT].parent = None
 
+    # find successor in InOrder Traversal of InOrder
+    # returns this node if exists, None otherwise
+    def successor(self):
 
+        sub_successor = None
+        # if there is a right sub tree
+        if self.child[RIGHT]:
+            # go into right sub tree
 
+            cur = self.child[RIGHT]
+            sub_successor = cur
+            # then go left as far as possible as this will be successor
+            while cur:
+                sub_successor = cur
+                cur = cur.child[LEFT]
+
+        # if no sub_successor, need to go up through parent and check if successor exists there
+        # otherwise return this sub_successor
+        if sub_successor:
+            return sub_successor
+        else:
+            # check if parent exists
+            if self.parent:
+                # if it is the left child
+                if self is self.parent.child[LEFT]:
+                    #successor in Inorder traversal is then the parent
+                    return self.parent
+                # is right child
+                else:
+                    cur = self.parent
+                    while cur and cur.parent:
+                        # keep going up to parent until we find
+                        # that our parent is a left node, return the parent of this parent
+                        if cur is cur.parent.child[LEFT]:
+                            return cur.parent
+                        cur = cur.parent
+
+            # if we get here we return None
+            return None
+
+    # find predecessor in InOrder Traversal of InOrder
+    # returns this node if exists, None otherwise
+    def predecessor(self):
+        sub_predecessor = None
+        # if there is a left sub tree
+        if self.child[LEFT]:
+            # go into left sub tree
+
+            cur = self.child[LEFT]
+            sub_predecessor = cur
+
+            # then go right as far as possible as this will be successor
+            while cur:
+                sub_predecessor = cur
+                cur = cur.child[RIGHT]
+        # if no sub_predecessor, need to go up through parent and check if predecessor exists there
+        # otherwise return this sub_predecessor
+        if sub_predecessor:
+            return sub_predecessor
+        else:
+            # check if parent exists
+            if self.parent:
+                # if it is the right child
+                if self is self.parent.child[RIGHT]:
+                    #predecessor in Inorder traversal is then the parent
+                    return self.parent
+                # is left child
+                else:
+                    cur = self.parent
+                    # check if there is parent
+                    while cur and cur.parent:
+                        # keep going up to parent until we find
+                        # that our parent is a right node, return the parent of this parent
+                        if cur is cur.parent.child[RIGHT]:
+                            return cur.parent
+                        cur = cur.parent
+
+            # if we get here we return None
+            return None
 
 ################### STATIC METHODS to operate on our BBTREE #########################
-# rotate a tree for balancing
+# rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
 def rotate(r_child, r_parent):
     rotation_direction = RIGHT if r_parent.child[LEFT] is r_child else LEFT
@@ -86,8 +163,156 @@ def rotate(r_child, r_parent):
     r_child.child[rotation_direction] = r_parent
     r_parent.parent = r_child
 
-#Test Inheritance of BBNode
+# returns true if node u is before v in the InOrder traversal, false otherwise
+def smaller(u, v):
+    # if u or v = None
+    if not u or not v:
+        return False
 
+    # if they are the same also return false
+    if u is v:
+        return False
+
+    # get height of u
+    height_u = 0
+    cur_u = u
+    while cur_u.parent:
+        height_u += 1
+        cur_u = cur_u.parent
+
+    # get height of v
+    height_v = 0
+    cur_v = v
+    while cur_v.parent:
+        height_v += 1
+        cur_v = cur_v.parent
+
+    #case where they have different root, then we can't determine smaller
+    if cur_u is not cur_v:
+        return False
+
+    # paths from root
+    u_path = []
+    v_path = []
+
+    # construct paths in term of Lefts and Rights from root
+    cur_u = u
+
+    while cur_u.parent:
+        if cur_u.parent.child[LEFT] is cur_u:
+            #build path bottom up, first index will be path starting from root
+            u_path = [LEFT] + u_path
+        else:
+            u_path = [RIGHT] + u_path
+        cur_u = cur_u.parent
+
+    cur_v = v
+
+    while cur_v.parent:
+        if cur_v.parent.child[LEFT] is cur_v:
+            #build path bottom up, first index will be path starting from root
+            v_path = [LEFT] + v_path
+        else:
+            v_path = [RIGHT] + v_path
+        cur_v = cur_v.parent
+
+    #we compare paths such that the one that is most left is the one that will be before in Inorder
+    i = 0
+    # we find index of first difference in paths
+    while i < height_u and i < height_v:
+        if u_path[i] != v_path[i]:
+            break
+        i += 1
+    # if we have not reached end of path u, and step at i is LEFT for u, then u is more left than v
+    if i < height_u and u_path[i] == LEFT:
+        return True
+    # if we have not reach end of path v, and step at i is RIGHT for v, v is more right than u
+    elif i < height_v and v_path[i] == RIGHT:
+        return True
+    else:
+        return False
+
+#starting at our start_node, return two trees either split starting from the LEFT or RIGHT of this node
+def split(start_node, direction, dummy):
+    if not start_node:
+        t1 = None
+        t2 = None
+        return
+
+    dummy.child[LEFT] = None
+    dummy.child[RIGHT] = None
+
+    # we want to add dummy node in manner where we don't cut off and part
+    # of the tree, and maintains InOrder of our tree, rotating dummy up until it
+    # replaces our root, where we then can isolate dummy creating two split
+    # trees
+
+
+    # split after our start node, t1 contains start node
+    if(direction == RIGHT):
+        sub_successor = None
+        if start_node.child[RIGHT]:
+            cur = start_node.child[RIGHT]
+            sub_successor = cur
+            while cur:
+                sub_successor = cur
+                cur = cur.child[LEFT]
+
+        if not sub_successor:
+            #None to right of start node, so replace with dummy
+            start_node.child[RIGHT] = dummy
+            dummy.parent = start_node
+        else:
+            # store dummy as left child of subtree successor which is immediately after our start node
+            # as this is always None, sub_successor does not have a right child by def
+            sub_successor.child[LEFT] = dummy
+            dummy.parent = sub_successor
+
+    # split before our start node, t1 does not contain start node
+    else:
+        sub_predecessor = None
+        if start_node.child[LEFT]:
+            cur = start_node.child[LEFT]
+            sub_predecessor = cur
+            while cur:
+                sub_predecessor = cur
+                cur = cur.child[RIGHT]
+
+        if not sub_predecessor:
+            # None at left child so replace that with dummy
+            start_node.child[LEFT] = dummy
+            dummy.parent = start_node
+        else:
+            # store dummy as right child of subtree predecessor which is immediately before our start node
+            # as this is always None, sub_predecessor does not have a right child by def
+            sub_predecessor.child[RIGHT] = dummy
+            dummy.parent = sub_predecessor
+
+    #rotate dummy until it becomes root
+    while dummy.parent:
+
+        p = dummy.parent
+        print(p)
+        rotate(dummy, p)
+
+
+    t1 = dummy.child[LEFT]
+    t2 = dummy.child[RIGHT]
+    return t1, t2
+# pre order traversal of node
+def print_tree(start_node):
+    _print_tree(start_node)
+    print("")
+
+def _print_tree(start_node):
+    if start_node:
+        print(start_node, end=" ")
+        _print_tree(start_node.child[LEFT])
+        _print_tree(start_node.child[RIGHT])
+########################################################################################
+
+
+#Test Inheritance of BBNode
 class BBNodeWithVal(BBTree):
     def __init__(self, val):
         super().__init__()
@@ -100,22 +325,60 @@ class BBNodeWithVal(BBTree):
 
 ################### Test ###################################################
 def test1():
-    b0 = BBNodeWithVal(1)
-    b1 = BBNodeWithVal(2)
-    b2 = BBNodeWithVal(10)
+    b0 = BBNodeWithVal(0)
+    b1 = BBNodeWithVal(1)
+    b2 = BBNodeWithVal(2)
     b0.child[LEFT] = b1
     b1.parent = b0
     b0.child[RIGHT] = b2
     b2.parent = b0
 
-    b3 = BBNodeWithVal(11)
+    b3 = BBNodeWithVal(3)
     b2.child[RIGHT] = b3
     b3.parent = b2
 
-    b4 = BBNodeWithVal(12)
+    b4 = BBNodeWithVal(4)
     b2.child[LEFT] = b4
     b4.parent = b2
-    print(b0.find_root())
+
+    b5 = BBNodeWithVal(5)
+    b1.child[LEFT] = b5
+    b5.parent = b1
+
+    b6 = BBNodeWithVal(6)
+    b1.child[RIGHT] = b6
+    b6.parent = b1
+    #print(b0.find_root())
+    #print(b0.last())
+    # print_tree(b0)
+    # print(b5.successor())
+    # print(b2.predecessor())
+    #
+    #
+    # a = BBTree()
+    # height_v = 0
+    # cur_v = b0
+    # while cur_v.parent:
+    #     height_v += 1
+    #     cur_v = cur_v.parent
+    # print(height_v)
+    #
+    # cur_u = b0
+    # u_path = []
+    # while cur_u.parent:
+    #     if cur_u.parent.child[LEFT] is cur_u:
+    #         #build path bottom up, first index will be path starting from root
+    #         u_path = [LEFT] + u_path
+    #     else:
+    #         u_path = [RIGHT] + u_path
+    #     cur_u = cur_u.parent
+    # print(u_path)
+    #
+    # print(smaller(b2,b3))
+
+    t1, t2 = split(b0, RIGHT, BBTree())
+    print_tree(t1)
+    print_tree(t2)
 
 if __name__ == "__main__":
     test1()
