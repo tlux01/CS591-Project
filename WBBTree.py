@@ -15,9 +15,15 @@ class WBBTree(BBTree):
         self.sub_tree_weight = subTreeWeight
 
     def set_weight(self,w):
+        w_diff = w - self.weight
         self.weight = w
+        sub_tree_weight += w_diff
+        aux = self.parent
+        while(aux):
+            aux.sub_tree_weight += w_diff
+            aux = aux.parent
     def add_weight(a):
-        self.set_weight(weight+a)
+        self.set_weight(self.weight+a)
     # these functions fix the weights
     def after_rot(self):
         self.parent.sub_tree_weight = self.sub_tree_weight
