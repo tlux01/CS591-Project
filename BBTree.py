@@ -136,6 +136,8 @@ class BBTree:
             # if we get here we return None
             return None
 
+    def after_rot(self):
+        pass
 ################### STATIC METHODS to operate on our BBTREE #########################
 # rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
@@ -162,6 +164,9 @@ def rotate(r_child, r_parent):
     # rotate parent to be child of child in direction
     r_child.child[rotation_direction] = r_parent
     r_parent.parent = r_child
+
+    # fix additional information in derived classes
+    r_parent.after_rot()
 
 # returns true if node u is before v in the InOrder traversal, false otherwise
 def smaller(u, v):

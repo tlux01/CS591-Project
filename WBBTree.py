@@ -22,7 +22,15 @@ class WBBTree(BBTree):
         self.weight = w
     def add_weight(a):
         self.set_weight(weight+a)
-
+    def after_rot(self):
+        self.parent.sub_tree_weight = self.sub_tree_weight
+        self.sub_tree_weight = self.weight
+        left = self.child[LEFT]
+        right = self.child[RIGHT]
+        if left:
+            self.sub_tree_weight += left.sub_tree_weight
+        if right:
+            self.sub_tree_weight += right.sub_tree_weight
 
 ################### STATIC METHODS to operate on our WBBTREE #########################
 
