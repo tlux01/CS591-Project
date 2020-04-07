@@ -1,5 +1,7 @@
 import random
 from BBTree import BBTree
+import BBTree as bbt
+
 #don't touch
 LEFT = 0
 RIGHT = 1
@@ -22,32 +24,8 @@ class WBBTree(BBTree):
         self.set_weight(weight+a)
 
 
-################### STATIC METHODS to operate on our BBTREE #########################
-# rotate a tree for balancing
-# rotate depends if child is left or right child of parent
-def rotate(r_child, r_parent):
-    rotation_direction = RIGHT if r_parent.child[LEFT] is r_child else LEFT
+################### STATIC METHODS to operate on our WBBTREE #########################
 
-    mid_tree = r_child.child[rotation_direction]
-
-    # move mid tree to opposite side of child of parent
-    r_parent.child[1 - rotation_direction] = mid_tree
-
-    # assign child the parent of its parent
-
-    r_child.parent = r_parent.parent
-
-    # update this new parent to replace its child which was
-    # r_parent to be r_child
-    if r_child.parent:
-        if (r_child.parent.child[LEFT] is r_parent):
-            r_child.parent.child[LEFT] = r_child
-        else:
-            r_child.parent.child[RIGHT] = r_child
-
-    # rotate parent to be child of child in direction
-    r_child.child[rotation_direction] = r_parent
-    r_parent.parent = r_child
 
 #Test Inheritance of WBBNode
 
@@ -83,6 +61,19 @@ def test1():
     b0.set_weight(2)
     print("b0 had weight {} and now has weight {}".format(w1,b0.get_weight()))
 
+def test2():
+    b0 = WBBNodeWithVal(0)
+    b1 = WBBNodeWithVal(1)
+
+    t = bbt.join(b0, b1, WBBTree())
+
+
+    for i in range(2, 10000):
+        t = bbt.join(t, WBBNodeWithVal(i), WBBTree())
+
+    print(bbt.height(t))
+    print("Weight: "+str(t.get_weight())+". Subtree weight: "+str(t.get_subtree_weight()))
+
 if __name__ == "__main__":
-    test1()
+    test2()
     print("Done")
