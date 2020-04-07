@@ -138,6 +138,8 @@ class BBTree:
 
     def after_rot(self):
         pass
+    def init(self):
+        pass
 ################### STATIC METHODS to operate on our BBTREE #########################
 # rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
@@ -256,8 +258,8 @@ def join(t1, t2, dummy):
     t1.parent = dummy
     t2.parent = dummy
 
-    #add later for weighted randomized trees
-    #dummy.init() or we can call this something else
+    #fix info for derived classes
+    dummy.init()
 
     # rotate dummy down until it is a leaf
     while dummy.child[LEFT] or dummy.child[RIGHT]:
@@ -347,6 +349,8 @@ def split(start_node, direction, dummy):
             sub_predecessor.child[RIGHT] = dummy
             dummy.parent = sub_predecessor
 
+    # for derived classes
+    dummy.init()
     #rotate dummy until it becomes root
     while dummy.parent:
 

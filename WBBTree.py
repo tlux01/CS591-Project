@@ -14,14 +14,11 @@ class WBBTree(BBTree):
         self.weight = weight
         self.sub_tree_weight = subTreeWeight
 
-    def get_weight(self):
-        return self.weight
-    def get_subtree_weight(self):
-        return self.sub_tree_weight
     def set_weight(self,w):
         self.weight = w
     def add_weight(a):
         self.set_weight(weight+a)
+    # these functions fix the weights
     def after_rot(self):
         self.parent.sub_tree_weight = self.sub_tree_weight
         self.sub_tree_weight = self.weight
@@ -31,8 +28,21 @@ class WBBTree(BBTree):
             self.sub_tree_weight += left.sub_tree_weight
         if right:
             self.sub_tree_weight += right.sub_tree_weight
-
-################### STATIC METHODS to operate on our WBBTREE #########################
+    def init(self):
+        sub_tree_weight = self.weight
+        left = self.child[LEFT]
+        right = self.child[RIGHT]
+        if left:
+            self.sub_tree_weight += left.sub_tree_weight
+        if right:
+            self.sub_tree_weight += right.sub_tree_weight
+    def isolate(self):
+        aux = self.parent
+        while(aux):
+            aux.sub_tree_weight -= self.sub_tree_weight
+            aux = aux.parent
+        BBTree.isolate(self)
+################### STATIC METHODS to operate on our WBBTree #########################
 
 
 #Test Inheritance of WBBNode
@@ -67,7 +77,7 @@ def test1():
 
     w1 = b0.get_weight()
     b0.set_weight(2)
-    print("b0 had weight {} and now has weight {}".format(w1,b0.get_weight()))
+    print("b0 had weight {} and now has weight {}".format(w1,b0.weight))
 
 def test2():
     b0 = WBBNodeWithVal(0)
@@ -80,7 +90,7 @@ def test2():
         t = bbt.join(t, WBBNodeWithVal(i), WBBTree())
 
     print(bbt.height(t))
-    print("Weight: "+str(t.get_weight())+". Subtree weight: "+str(t.get_subtree_weight()))
+    print("Weight: "+str(t.weight)+". Subtree weight: "+str(t.sub_tree_weight))
 
 if __name__ == "__main__":
     test2()
