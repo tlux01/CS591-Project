@@ -17,7 +17,7 @@ class WBBTree(BBTree):
     def set_weight(self,w):
         w_diff = w - self.weight
         self.weight = w
-        sub_tree_weight += w_diff
+        self.sub_tree_weight += w_diff
         aux = self.parent
         while(aux):
             aux.sub_tree_weight += w_diff
@@ -48,8 +48,26 @@ class WBBTree(BBTree):
             aux.sub_tree_weight -= self.sub_tree_weight
             aux = aux.parent
         BBTree.isolate(self)
-################### STATIC METHODS to operate on our WBBTree #########################
 
+    # rerturn the node of tree t that corresponds to w wrt In-order
+    def locate(t,w):
+
+
+################### STATIC METHODS to operate on our WBBTree #########################
+def print_tree(root):
+    h = bbt.height(root)
+    for i in range(1,  h+ 1):
+        _print_tree(root, i)
+        print("")
+
+def _print_tree(root, level):
+    if not root:
+        return root
+    if level == 1:
+        print(root, end = ' ')
+    elif level > 1:
+        _print_tree(root.child[LEFT], level - 1)
+        _print_tree(root.child[RIGHT], level - 1)
 
 #Test Inheritance of WBBNode
 
@@ -58,7 +76,7 @@ class WBBNodeWithVal(WBBTree):
         super().__init__()
         self.val = val
     def __repr__(self):
-        return "Val: "+str(self.val)+". Weight: "+str(self.weight)
+        return "(" + str(self.val) + ", " + str(self.weight) + ", " + str(self.priority)[:5] + ")"
 
 
 ################### Test ###################################################
@@ -81,9 +99,11 @@ def test1():
     print(b0.find_root()) #expect 1
     print(b4.find_root()) #expect 1
 
-    w1 = b0.get_weight()
+    w1 = b0.weight
     b0.set_weight(2)
     print("b0 had weight {} and now has weight {}".format(w1,b0.weight))
+    print("The tree looks like:")
+    print_tree(b0)
 
 def test2():
     b0 = WBBNodeWithVal(0)
@@ -99,5 +119,5 @@ def test2():
     print("Weight: "+str(t.weight)+". Subtree weight: "+str(t.sub_tree_weight))
 
 if __name__ == "__main__":
-    test2()
+    test1()
     print("Done")
