@@ -9,10 +9,10 @@ RIGHT = 1
 # Weighted Balance Binary Tree Class
 class WBBTree(BBTree):
 
-    def __init__(self, weight = 1, subTreeWeight = 1):
+    def __init__(self, weight = 1, sub_tree_weight = 1):
         super().__init__()
         self.weight = weight
-        self.sub_tree_weight = subTreeWeight
+        self.sub_tree_weight = sub_tree_weight
 
     def set_weight(self,w):
         w_diff = w - self.weight
@@ -49,11 +49,34 @@ class WBBTree(BBTree):
             aux = aux.parent
         BBTree.isolate(self)
 
-    # rerturn the node of tree t that corresponds to w wrt In-order
-    def locate(t,w):
-
-
 ################### STATIC METHODS to operate on our WBBTree #########################
+
+# return the node of tree t that corresponds to w wrt In-order
+def locate(t,w):
+    curr_node = t
+    left = curr_node.child[LEFT]
+    lower = left.sub_tree_weight if curr_node.child[LEFT] else 0
+    upper = lower + curr_node.weight
+
+    while (w <= lower or w > upper):
+        if (w <= lower):
+            # proceed to the left child
+            curr_node = left
+            lower -= curr_node.sub_tree_weight
+            if (curr_node.child[LEFT]):
+                lower += curr_node.child[LEFT].sub_tree_weight
+            upper = lower + curr_node.weight
+        else:
+            # proceed to the right child
+            curr_node = curr_node.child[RIGHT]
+            lower = upper + curr_node.sub_tree_weight - curr_node.weight
+            if (curr_node.child[RIGHT]):
+                lower -= curr_node.child[RIGHT].sub_tree_weight
+            upper = lower + curr_node.weight
+
+    # in the paper they store w - lower in offset. Python has no such ability
+    return curr_node
+
 def print_tree(root):
     h = bbt.height(root)
     for i in range(1,  h+ 1):
@@ -81,29 +104,33 @@ class WBBNodeWithVal(WBBTree):
 
 ################### Test ###################################################
 def test1():
-    b0 = WBBNodeWithVal(1)
-    b1 = WBBNodeWithVal(2)
-    b2 = WBBNodeWithVal(10)
+    b0 = WBBNodeWithVal(0)
+    b1 = WBBNodeWithVal(1)
+    b2 = WBBNodeWithVal(2)
     b0.child[LEFT] = b1
     b1.parent = b0
     b0.child[RIGHT] = b2
     b2.parent = b0
 
-    b3 = WBBNodeWithVal(11)
+    b3 = WBBNodeWithVal(3)
     b2.child[RIGHT] = b3
     b3.parent = b2
 
-    b4 = WBBNodeWithVal(12)
+    b4 = WBBNodeWithVal(4)
     b2.child[LEFT] = b4
     b4.parent = b2
-    print(b0.find_root()) #expect 1
-    print(b4.find_root()) #expect 1
+    print(b0.find_root())
+    print(b4.find_root())
 
     w1 = b0.weight
     b0.set_weight(2)
     print("b0 had weight {} and now has weight {}".format(w1,b0.weight))
     print("The tree looks like:")
     print_tree(b0)
+    w = 4.5
+    print("Locating node corresponding to weight {}:".format(w))
+    print(locate(b0,w))
+
 
 def test2():
     b0 = WBBNodeWithVal(0)
