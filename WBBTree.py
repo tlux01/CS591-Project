@@ -49,6 +49,15 @@ class WBBTree(BBTree):
             aux = aux.parent
         BBTree.isolate(self)
 
+    # recursively update subtree weights for all nodes in subtree of self
+    def update_weights(self):
+        self.sub_tree_weight = self.weight
+        if self.child[LEFT]:
+            self.child[LEFT].update_weights()
+            self.sub_tree_weight += self.child[LEFT].sub_tree_weight
+        if self.child[RIGHT]:
+            self.child[RIGHT].update_weights()
+            self.sub_tree_weight += self.child[RIGHT].sub_tree_weight
 ################### STATIC METHODS to operate on our WBBTree #########################
 
 # return the node of tree t that corresponds to w wrt In-order
@@ -59,6 +68,7 @@ def locate(t,w):
     upper = lower + curr_node.weight
 
     while (w <= lower or w > upper):
+        print("current node: {}. lower: {}. upper: {}".format(curr_node, lower, upper))
         if (w <= lower):
             # proceed to the left child
             curr_node = left
@@ -66,7 +76,7 @@ def locate(t,w):
             if (curr_node.child[LEFT]):
                 lower += curr_node.child[LEFT].sub_tree_weight
             upper = lower + curr_node.weight
-        else:
+        elif (w > upper):
             # proceed to the right child
             curr_node = curr_node.child[RIGHT]
             lower = upper + curr_node.sub_tree_weight - curr_node.weight
@@ -127,9 +137,8 @@ def test1():
     print("b0 had weight {} and now has weight {}".format(w1,b0.weight))
     print("The tree looks like:")
     print_tree(b0)
-    w = 4.5
-    print("Locating node corresponding to weight {}:".format(w))
-    print(locate(b0,w))
+    print("In-order:")
+    print(b0.in_order())
 
 
 def test2():
@@ -139,12 +148,50 @@ def test2():
     t = bbt.join(b0, b1, WBBTree())
 
 
-    for i in range(2, 10000):
+    for i in range(2, 10):
         t = bbt.join(t, WBBNodeWithVal(i), WBBTree())
 
     print(bbt.height(t))
     print("Weight: "+str(t.weight)+". Subtree weight: "+str(t.sub_tree_weight))
 
+    print("The tree looks like:")
+    print_tree(t)
+
+    print("In-order:")
+    print(t.in_order())
+    w = 4.5
+    print("Locating node corresponding to weight {}:".format(w))
+    print(locate(b0,w))
+
+
+def test3():
+    b0 = WBBNodeWithVal(0)
+    b0.weight = 2
+    b1 = WBBNodeWithVal(1)
+    b2 = WBBNodeWithVal(2)
+    b0.child[LEFT] = b1
+    b1.parent = b0
+    b0.child[RIGHT] = b2
+    b2.parent = b0
+
+    b3 = WBBNodeWithVal(3)
+    b2.child[RIGHT] = b3
+    b3.parent = b2
+
+    b4 = WBBNodeWithVal(4)
+    b2.child[LEFT] = b4
+    b4.parent = b2
+
+    b0.update_weights()
+
+    print("In-order:")
+    print(b0.in_order())
+
+    w = 4.5
+    print("Locating weight "+str(w))
+    print(locate(b0,w))
+
+
 if __name__ == "__main__":
-    test1()
+    test3()
     print("Done")

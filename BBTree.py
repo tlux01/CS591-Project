@@ -140,6 +140,16 @@ class BBTree:
         pass
     def init(self):
         pass
+
+    # returns the in-order list of nodes
+    def in_order(self):
+        accum = [self]
+        if self.child[LEFT]:
+            accum = self.child[LEFT].in_order() + accum
+        if self.child[RIGHT]:
+            accum = accum + self.child[RIGHT].in_order()
+        return accum
+        
 ################### STATIC METHODS to operate on our BBTREE #########################
 # rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
@@ -386,6 +396,8 @@ def _print_tree(root, level):
     elif level > 1:
         _print_tree(root.child[LEFT], level - 1)
         _print_tree(root.child[RIGHT], level - 1)
+
+
 ########################################################################################
 
 
