@@ -15,23 +15,21 @@ class BBTree:
 
     # starting at this node, walk down as far left
     def first(self):
-        leftMost = None
         #current node in traversal
         cur = self
         while cur.child[LEFT]:
             cur = cur.child[LEFT]
-            leftMost = cur
-        return leftMost
+
+        return cur
 
     # starting at this node, walk down as far right
     def last(self):
-        rightMost = None
         #current node in traversal
         cur = self
         while cur.child[RIGHT]:
             cur = cur.child[RIGHT]
-            rightMost = cur
-        return rightMost
+
+        return cur
 
     # follow parent up the tree as long as possible
     def find_root(self):
@@ -136,6 +134,14 @@ class BBTree:
             # if we get here we return None
             return None
 
+    def cyclic_pred(self):
+        c_pred = self.last() if self is self.first() else self.predecessor()
+        return c_pred
+
+    def cyclic_succ(self):
+        c_succ = self.first() if self is self.last() else self.successor()
+        return c_succ
+
     def after_rot(self):
         pass
     def init(self):
@@ -149,7 +155,7 @@ class BBTree:
         if self.child[RIGHT]:
             accum = accum + self.child[RIGHT].in_order()
         return accum
-        
+
 ################### STATIC METHODS to operate on our BBTREE #########################
 # rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
@@ -482,7 +488,17 @@ def test2():
     print(height(t))
     #print_tree(t)
 
-
+def test3():
+    b0 = BBNodeWithVal(0)
+    b1 = BBNodeWithVal(1)
+    b2 = BBNodeWithVal(2)
+    b0.child[LEFT] = b1
+    b1.parent = b0
+    b1.child[LEFT] = b2
+    b2.parent = b1
+    print(b0.in_order())
+    print(b0.cyclic_succ())
+    print(b0.successor())
 if __name__ == "__main__":
-    test2()
+    test3()
     print("Done")
