@@ -9,11 +9,13 @@ RIGHT = 1
 # Weighted Balance Binary Tree Class
 class WBBTree(BBTree):
 
-    def __init__(self, weight = 1, sub_tree_weight = 1):
+    def __init__(self, weight = 1):
         super().__init__()
         self.weight = weight
-        self.sub_tree_weight = sub_tree_weight
+        self.sub_tree_weight = weight
 
+    def __repr__(self):
+        return "(weight:{}, subtree weight:{})".format(self.weight, self.sub_tree_weight)
     def set_weight(self,w):
         w_diff = w - self.weight
         self.weight = w
@@ -71,12 +73,12 @@ def locate(t,w):
         print("current node: {}. lower: {}. upper: {}".format(curr_node, lower, upper))
         if (w <= lower):
             # proceed to the left child
-            curr_node = left
+            curr_node = curr_node.child[LEFT]
             lower -= curr_node.sub_tree_weight
             if (curr_node.child[LEFT]):
                 lower += curr_node.child[LEFT].sub_tree_weight
             upper = lower + curr_node.weight
-        elif (w > upper):
+        else:
             # proceed to the right child
             curr_node = curr_node.child[RIGHT]
             lower = upper + curr_node.sub_tree_weight - curr_node.weight
@@ -191,7 +193,16 @@ def test3():
     print("Locating weight "+str(w))
     print(locate(b0,w))
 
-
+def test4():
+    b0 = WBBTree(20)
+    b1 = WBBTree(10)
+    t = bbt.join(b0, b1, WBBTree())
+    t = bbt.join(t, WBBTree(), WBBTree())
+    t = bbt.join(t, WBBTree(12), WBBTree())
+    t = bbt.join(t, WBBTree(2), WBBTree())
+    print_tree(t)
+    print(t.in_order())
+    print(locate(t, 32))
 if __name__ == "__main__":
-    test3()
+    test4()
     print("Done")
