@@ -499,6 +499,7 @@ def test3():
     print(b0.in_order())
     print(b0.cyclic_succ())
     print(b0.successor())
+    
 if __name__ == "__main__":
     test3()
     print("Done")
