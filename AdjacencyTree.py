@@ -18,19 +18,19 @@ class AdjacencyTree(WBBTree):
         #                                             self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
         #return "({}, {})".format(self.weight, self.edge)
         return str(self.edge)
+
     def insert(self, e, dummy):
         '''return self with inserted edge (a,b)'''
         aux = AdjacencyTree(e)
         return BBTree.join(self,aux,dummy)
 
 
-def delete(node, dummy):
-    '''delete node'''
-
-    t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)
-    # UNCOMMENT THIS LINE AFTER:
-    t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)
-    return BBTree.join(t1,t2,dummy)
+    def delete(self, dummy):
+        '''delete the self node'''
+        t1, t2 = BBTree.split(self, BBTree.LEFT, dummy)
+        # UNCOMMENT THIS LINE AFTER:
+        t3, t2 = BBTree.split(self, BBTree.RIGHT, dummy)
+        return BBTree.join(t1,t2,dummy)
 
 
 
@@ -47,13 +47,10 @@ def test1():
     print("In-order: ")
     print(str(at.in_order()))
 
-
-    #print("Inseting a node")
-
     print("Deleting a node...")
     print("After deletion")
     print("In-order: ")
-    print(delete(ats[4],dummy).in_order())
+    print(ats[4].delete(dummy).in_order())
 
 
 def test2():
