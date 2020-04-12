@@ -2,7 +2,7 @@ import networkx as nx
 
 from WBBTree import WBBTree
 
-class EulerTree(WBBTree):
+class EulerTourTree(WBBTree):
 
     def __init__(self, dc, node, level = -1, active = False):
 
@@ -21,8 +21,39 @@ class EulerTree(WBBTree):
         self.edge_occurences = [None, None]
 
     def __repr__(self):
-        output_string = "EulerTree(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
+        output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
         return output_string
+
+    # acts as a second constructor, creates a new EulerTourTree occurence from
+    # an active occurence
+    def create_new_occ(self):
+        # remember our constructor defaults active to false which is what we want
+        new_node = EulerTourTree(self.dc, self.node, self.level)
+        return new_node
+
+################# Static Methods for EulerTree ######################
+
+# contructs new euler tour from linking of nodes u and v,
+# need to make sure that u and v are initially disconnected
+def et_link(u, v, edge, i):
+    # nodes u,v, i is the level, dc is the pointer to the DynamicCon object
+
+    # get active occurence of the nodes
+    u_active = self.dc.G.nodes[u]["data"].active_occ[i]
+    v_active = self.dc.G.nodes[v]["data"].active_occ[i]
+
+    new_u_occ = u_active.create_new_occ()
+    return
+
+
+
+
+
+######################################################################
+
+
+
+
 
 class DynamicConNode():
     def __init__(self):
@@ -33,7 +64,7 @@ class DynamicConNode():
     def __repr__(self):
         return str(self.active_occ)
 
-class DynamicConEdge():
+class DynamicConEdge:
     def __init__(self):
         self.level = None
 
@@ -89,8 +120,9 @@ class DynamicCon:
             g_nodes[node]["data"].active_occ = [None for i in range(self.max_level + 1)]
             g_nodes[node]["data"].adjacent_edges = [None for i in range(self.max_level + 1)]
             for level in range(self.max_level + 1):
-                # create euler tree data structure for each node
-                g_nodes[node]["data"].active_occ[level] = EulerTree(self, node, level, True)
+                # create euler tree data structure for each node, default it as active_occ
+                # as each node is its own EulerTree, thus only one node in the tour
+                g_nodes[node]["data"].active_occ[level] = EulerTourTree(self, node, level, True)
 
         g_edges = self.G.edges
         for edge in g_edges:
@@ -112,7 +144,7 @@ class DynamicCon:
 
     # Insert edge into F_i, the tree spanning Union G_j , j <= i, where i
     # is the level
-    def insert_tree(self, edge, i, create_tree_occ = False)
+    def insert_tree(self, edge, i, create_tree_occ = False):
         # create_tree_occ is to flag signifying if we need to construct list
         # tree_occ for the DynamicCon class
 
@@ -133,6 +165,8 @@ class DynamicCon:
         # edge now has pointer to DynamicCon's tree edges at level i,
         # and add edge to this list
         self.G.edges[edge]["data"].tree_level_edges = self.tree_edges[i].append(edge)
+
+
 def test1():
     G = nx.Graph()
     for i in range(3):
@@ -142,6 +176,10 @@ def test1():
     p = DynamicCon(G)
     #print(p.G.nodes(data = True))
 
+    e1 = EulerTourTree(p, 1, 10, True)
+    e2 = e1.create_new_occ()
+    print(e1, e2)
+    print(e1 is e2)
 
 if __name__ == "__main__":
     test1()
