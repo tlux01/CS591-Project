@@ -28,8 +28,8 @@ class AdjacencyTree(WBBTree):
     def delete(self, dummy):
         '''delete the self node'''
         t1, t2 = BBTree.split(self, BBTree.LEFT, dummy)
-        # UNCOMMENT THIS LINE AFTER:
         t3, t2 = BBTree.split(self, BBTree.RIGHT, dummy)
+        self.isolate()
         return BBTree.join(t1,t2,dummy)
 
 
