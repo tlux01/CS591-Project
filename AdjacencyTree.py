@@ -27,7 +27,8 @@ def delete(node, dummy):
     print(str(BBTree.print_tree(t1)))
     print("t2:" )
     print(str(BBTree.print_tree(t2)))
-
+    print("node:" )
+    print(str(BBTree.print_tree(node)))
     # UNCOMMENT THIS LINE AFTER:
     t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)
 
