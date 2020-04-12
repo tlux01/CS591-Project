@@ -54,6 +54,8 @@ class BBTree:
         if self.child[RIGHT]:
             self.child[RIGHT].parent = None
 
+        # remove children
+        self.child
     # find successor in InOrder Traversal of InOrder
     # returns this node if exists, None otherwise
     def successor(self):
@@ -157,7 +159,6 @@ class BBTree:
         return accum
 
     def makeChild(self,whichOne,child):
-        '''does not preserve the heap order. Only for testing not involving the heap'''
         child.parent = self
         self.child[whichOne] = child
 ################### STATIC METHODS to operate on our BBTREE #########################
@@ -171,6 +172,9 @@ def rotate(r_child, r_parent):
     # move mid tree to opposite side of child of parent
     r_parent.child[1 - rotation_direction] = mid_tree
 
+
+    if mid_tree:
+        mid_tree.parent = r_parent
     # assign child the parent of its parent
 
     r_child.parent = r_parent.parent
@@ -261,7 +265,6 @@ def smaller(u, v):
 
 # join two trees with the correct InOrder based on their priority
 def join(t1, t2, dummy):
-
     if not t1 or not t2:
         if t1:
             return t1
@@ -277,7 +280,6 @@ def join(t1, t2, dummy):
 
     t1.parent = dummy
     t2.parent = dummy
-
     #fix info for derived classes
     dummy.init()
 
@@ -322,6 +324,7 @@ def split(start_node, direction, dummy):
 
     dummy.child[LEFT] = None
     dummy.child[RIGHT] = None
+
 
     # we want to add dummy node in manner where we don't cut off and part
     # of the tree, and maintains InOrder of our tree, rotating dummy up until it
@@ -372,6 +375,7 @@ def split(start_node, direction, dummy):
     # for derived classes
     dummy.init()
     #rotate dummy until it becomes root
+
     while dummy.parent:
 
         p = dummy.parent
@@ -381,6 +385,10 @@ def split(start_node, direction, dummy):
 
     t1 = dummy.child[LEFT]
     t2 = dummy.child[RIGHT]
+
+
+    dummy.isolate()
+
     return t1, t2
 
 # for level order traversal
@@ -498,7 +506,7 @@ def test2():
     b0 = BBNodeWithVal(0)
     b1 = BBNodeWithVal(1)
 
-    t = join(b0, b1, BBTree())
+    t = (b0, b1, BBTree())
 
 
     for i in range(2, 100000):
@@ -515,10 +523,9 @@ def test3():
     b1.parent = b0
     b1.child[LEFT] = b2
     b2.parent = b1
-    print(b0.in_order())
-    print(b0.cyclic_succ())
-    print(b0.successor())
+    b0.isolate()
+    print(b1.parent)
 
 if __name__ == "__main__":
-    test1()
+    test3()
     print("Done")

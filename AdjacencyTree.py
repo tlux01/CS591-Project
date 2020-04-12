@@ -1,6 +1,8 @@
 from WBBTree import WBBTree
 import BBTree
+import random
 
+random.seed(10)
 class AdjacencyTree(WBBTree):
 
     # (a,b) is the edge
@@ -10,9 +12,12 @@ class AdjacencyTree(WBBTree):
         self.edge = e
 
     def __repr__(self):
-        return "{}".format(self.edge)
+        # return "{} , parent: {}, children: [{},{}] |".format(self.edge,
+        #                                             self.parent.edge if self.parent else "None",
+        #                                             self.child[BBTree.LEFT].edge if self.child[BBTree.LEFT] else "None" ,
+        #                                             self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
         #return "({}, {})".format(self.weight, self.edge)
-
+        return str(self.edge)
     def insert(self, e, weight = 1):
         '''in-place insert edge (a,b) in the tree. return the node with the edge'''
         aux = AdjacencyTree(e, weight)
@@ -22,15 +27,10 @@ class AdjacencyTree(WBBTree):
 
 def delete(node, dummy):
     '''delete node'''
-    t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)
-    print("t1:" )
-    print(str(BBTree.print_tree(t1)))
-    print("t2:" )
-    print(str(BBTree.print_tree(t2)))
 
+    t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)
     # UNCOMMENT THIS LINE AFTER:
     t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)
-
     return BBTree.join(t1,t2,dummy)
 
 
@@ -39,7 +39,7 @@ def delete(node, dummy):
 def test1():
     dummy = AdjacencyTree( -1 )
     #edges = [(1,2),(2,3),(3,4),(4,5),(5,6)]
-    edges = [x for x in range(1,6)]
+    edges = [x for x in range(1,10)]
     ats = [AdjacencyTree(e) for e in edges]
     at = AdjacencyTree( 0 )
     for t in ats:
@@ -47,18 +47,16 @@ def test1():
     print("Before deletion")
     print("In-order: ")
     print(str(at.in_order()))
-    print("Tree: ")
-    print(str(BBTree.print_tree(at)))
+
 
     #print("Inseting a node")
 
     print("Deleting a node...")
-    delete(ats[0],dummy)
     print("After deletion")
     print("In-order: ")
-    print(str(at.in_order()))
-    print("Tree: ")
-    print(str(BBTree.print_tree(at)))
+    print(delete(ats[8],dummy).in_order())
+
+
 if __name__ == "__main__":
     test1()
     print("Done")
