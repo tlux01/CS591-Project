@@ -1,6 +1,15 @@
 import networkx as nx
 
 from WBBTree import WBBTree
+from AdjacencyTree import AdjacencyTree
+
+from BBTree import BBTree
+import BBTree as bbt
+
+#don't touch
+LEFT = 0
+RIGHT = 1
+
 
 class EulerTourTree(WBBTree):
 
@@ -21,7 +30,8 @@ class EulerTourTree(WBBTree):
         self.edge_occurences = [None, None]
 
     def __repr__(self):
-        output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
+        output_string = "ETT(node:{})".format(self.node)
+        #output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
         return output_string
 
     # acts as a second constructor, creates a new EulerTourTree occurence from
@@ -31,7 +41,120 @@ class EulerTourTree(WBBTree):
         new_node = EulerTourTree(self.dc, self.node, self.level)
         return new_node
 
-################# Static Methods for EulerTree ######################
+
+    def pass_activity(self, to):
+        '''pass activity from self to to'''
+        if (not self.active):
+            raise ValueError("tryna pass activity from an inactive node")
+        self.active = false;
+        to.active = true;
+        to.set_weight(self.weight)
+        self.weight = 0
+        self.dc.G.nodes[self.node]["data"].active_occ[self.level] = to
+
+
+
+
+################# Static Methods for EulerTourTree ######################
+
+def treeToETList(dc,G,root):
+    return treeToETListHelper(dc, G, root, set(),[])
+
+def treeToETListHelper(dc, G,root, processedNodes, ETlist):
+    '''processedNodes is a set'''
+    ETlist += [EulerTourTree(dc,root,1,False)]
+    processedNodes = processedNodes.union(set([root]))
+    unprocessedNeighbors = set(list(nx.neighbors(G, root))).intersection(processedNodes)
+    if unprocessedNeighbors is not empty:
+        for neighbor in list(unprocessedNeighbors):
+            ETlist += treeToETListHelper(dc,G,neighbor,processedNodes,ETlist)
+    return ETlist
+
+
+
+# i is the level, changes root from old_root to new new_root
+# make new root first in EulerTour
+def change_root(old_root, new_root, i, dc):
+    # first node in inorder Traversal
+    first_node = old_root.first()
+
+    # if new_root is already the first node we are done
+    if new_root is first_node:
+        return
+
+    # create new occurence that will arise from changing root
+    new_occ = new_root.create_new_occ()
+
+    # we now last node in EulerTour is the old_root
+    last_node = old_root.last()
+
+    if first_node.active:
+        # make the last occurence of root to be the active
+        first_node.pass_activity(last_node)
+
+    ## NOTSURE: what if these edge occurences are None
+    if (new_root.edge_occurences[LEFT] == new_root.edge_occurences[RIGHT]):
+        k = 0
+        # replace none pointer to this new occurence
+        edge = new_root.edge_occurences[LEFT]
+        while True:
+            if dc.G.edges[edge]["data"].tree_occ[i][k] is not None:
+                k += 1
+            else:
+                dc.G.edges[edge]["data"].tree_occ[i][k] = new_occ
+                break
+    else:
+        k = 0
+        # replace new_root with this new occurence
+        edge = new_root.edge_occurences[LEFT]
+        while True:
+            if dc.G.edges[edge]["data"].tree_occ[i][k] is not new_root:
+                k += 1
+            else:
+                dc.G.edges[edge]["data"].tree_occ[i][k] = new_occ
+                break
+
+    # edge is represented by tuple
+    first_edge = first_node.edge_occurences[RIGHT]
+    if first_edge != last_node.edge_occurences[LEFT] or new_root is last_node:
+        k = 0
+        # find pointer to first node
+        while True:
+            if dc.G.edges[first_edge]["data"].tree_occ[i][k] is not first_node:
+                k += 1
+            else:
+                dc.G.edges[first_edge]["data"].tree_occ[i][k] = last_node
+                break
+    else:
+        k = 0
+        # find poitner to first node
+        while True:
+            if dc.G.edges[first_edge]["data"].tree_occ[i][k] is not first_node:
+                k += 1
+            else:
+                dc.G.edges[first_edge]["data"].tree_occ[i][k] = None
+                break
+
+    #right edge of first node becomes right edge of last node
+    last_node.edge_occurences[RIGHT] = first_edge
+
+    # left edge of new_root becomes left edge of new_occ
+    new_occ.edge_occurences[LEFT] = new_root.edge_occurences[LEFT]
+    # new root will have no left edge as it is root
+    new_root.edge_occurences[LEFT] = None
+
+    # get rid of first_node
+    s1, s2 = bbt.split(first_node, RIGHT, dc.et_dummy)
+    # when u see a deletion of a node, isolate
+    first_node.isolate()
+
+    s1, s2 = bbt.split(new_root, LEFT, dc.et_dummy)
+
+    s3 = bbt.join(s1, new_occ, dc.et_dummy)
+
+    et = bbt.join(s2, s3, dc.et_dummy)
+
+    return et
 
 # contructs new euler tour from linking of nodes u and v,
 # need to make sure that u and v are initially disconnected
@@ -113,7 +236,7 @@ class DynamicCon:
         # which we will represent as a tuple on a level
         self.non_tree_edges = [[] for i in range(self.max_level + 1)]
         self.tree_edges = [[] for i in range(self.max_level + 1)]
-
+        self.et_dummy = EulerTourTree(self, None)
         g_nodes = self.G.nodes
         for node in g_nodes:
             g_nodes[node]["data"] = DynamicConNode()
@@ -181,5 +304,16 @@ def test1():
     print(e1, e2)
     print(e1 is e2)
 
+def test2():
+    G = nx.Graph()
+    for i in range(3):
+        G.add_node(i)
+    G.add_edge(0,1)
+    G.add_edge(1,2)
+    p = DynamicCon(G)
+
+    print(str(treeToETList(p, G, i)))
+
+
 if __name__ == "__main__":
-    test1()
+    test2()
