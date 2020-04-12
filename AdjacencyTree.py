@@ -2,7 +2,7 @@ from WBBTree import WBBTree
 import BBTree
 import random
 
-random.seed(10)
+#random.seed(10)
 class AdjacencyTree(WBBTree):
 
     # (a,b) is the edge
@@ -18,11 +18,10 @@ class AdjacencyTree(WBBTree):
         #                                             self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
         #return "({}, {})".format(self.weight, self.edge)
         return str(self.edge)
-    def insert(self, e, weight = 1):
-        '''in-place insert edge (a,b) in the tree. return the node with the edge'''
-        aux = AdjacencyTree(e, weight)
-        self = BBTree.join(aux)
-        return aux
+    def insert(self, e, dummy):
+        '''return self with inserted edge (a,b)'''
+        aux = AdjacencyTree(e)
+        return BBTree.join(self,aux,dummy)
 
 
 def delete(node, dummy):
@@ -54,9 +53,22 @@ def test1():
     print("Deleting a node...")
     print("After deletion")
     print("In-order: ")
-    print(delete(ats[8],dummy).in_order())
+    print(delete(ats[4],dummy).in_order())
+
+
+def test2():
+    dummy = AdjacencyTree( -1 )
+    #edges = [(1,2),(2,3),(3,4),(4,5),(5,6)]
+    edges = [x for x in range(1,10)]
+    ats = [AdjacencyTree(e) for e in edges]
+    at = AdjacencyTree( 0 )
+    for e in edges:
+        at = at.insert(e,dummy)
+    print("In-order: ")
+    print(at.in_order())
+    print()
 
 
 if __name__ == "__main__":
-    test1()
+    test2()
     print("Done")
