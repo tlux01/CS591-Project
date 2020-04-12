@@ -16,7 +16,7 @@ class AdjacencyTree(WBBTree):
     def insert(self, e, weight = 1):
         '''in-place insert edge (a,b) in the tree. return the node with the edge'''
         aux = AdjacencyTree(e, weight)
-        self = self.join(aux)
+        self = BBTree.join(aux)
         return aux
 
 
@@ -27,9 +27,9 @@ def delete(node, dummy):
     print(str(BBTree.print_tree(t1)))
     print("t2:" )
     print(str(BBTree.print_tree(t2)))
-    
+
     # UNCOMMENT THIS LINE AFTER:
-    #t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)
+    t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)
 
     return BBTree.join(t1,t2,dummy)
 
@@ -42,16 +42,15 @@ def test1():
     edges = [x for x in range(1,6)]
     ats = [AdjacencyTree(e) for e in edges]
     at = AdjacencyTree( 0 )
-    at.makeChild(BBTree.LEFT, ats[0])
-    at.makeChild(BBTree.RIGHT, ats[1])
-    ats[0].makeChild(BBTree.LEFT, ats[2])
-    ats[0].makeChild(BBTree.RIGHT, ats[3])
-    ats[1].makeChild(BBTree.RIGHT, ats[4])
-    # print("Before deletion")
-    # print("In-order: ")
-    # print(str(at.in_order()))
-    # print("Tree: ")
-    # print(str(BBTree.print_tree(at)))
+    for t in ats:
+        at = BBTree.join(at,t,dummy)
+    print("Before deletion")
+    print("In-order: ")
+    print(str(at.in_order()))
+    print("Tree: ")
+    print(str(BBTree.print_tree(at)))
+
+    #print("Inseting a node")
 
     print("Deleting a node...")
     delete(ats[0],dummy)

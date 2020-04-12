@@ -157,6 +157,7 @@ class BBTree:
         return accum
 
     def makeChild(self,whichOne,child):
+        '''does not preserve the heap order. Only for testing not involving the heap'''
         child.parent = self
         self.child[whichOne] = child
 ################### STATIC METHODS to operate on our BBTREE #########################
