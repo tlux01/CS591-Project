@@ -27,18 +27,8 @@ class AdjacencyTree(WBBTree):
 
 def delete(node, dummy):
     '''delete node'''
-<<<<<<< HEAD
-    t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)
-    print("t1:" )
-    print(str(BBTree.print_tree(t1)))
-    print("t2:" )
-    print(str(BBTree.print_tree(t2)))
-    print("node:" )
-    print(str(BBTree.print_tree(node)))
-=======
 
     t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)
->>>>>>> 97080c49b8f638d49c914f94735683fe7b08fd02
     # UNCOMMENT THIS LINE AFTER:
     t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)
     return BBTree.join(t1,t2,dummy)
