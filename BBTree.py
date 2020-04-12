@@ -156,6 +156,9 @@ class BBTree:
             accum = accum + self.child[RIGHT].in_order()
         return accum
 
+    def makeChild(self,whichOne,child):
+        child.parent = self
+        self.child[whichOne] = child
 ################### STATIC METHODS to operate on our BBTREE #########################
 # rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
@@ -371,7 +374,7 @@ def split(start_node, direction, dummy):
     while dummy.parent:
 
         p = dummy.parent
-        print(p)
+        #print(p)
         rotate(dummy, p)
 
 
@@ -470,10 +473,25 @@ def test1():
     # print(u_path)
     #
     # print(smaller(b2,b3))
+    print("In-order before split: ")
+    print(str(b0.in_order()))
+    print("Tree before split: ")
+    print(str(print_tree(b0)))
 
     t1, t2 = split(b0, RIGHT, BBTree())
+
+    print("In-order of left tree: ")
+    print(str(t1.in_order()))
     print_tree(t1)
+    print("In-order of right tree: ")
+    print(str(t2.in_order()))
     print_tree(t2)
+
+    print("Is the tree preserved after the split?")
+    print("In-order: ")
+    print(str(b0.in_order()))
+    print("Tree after split: ")
+    print(str(print_tree(b0)))
 
 def test2():
     b0 = BBNodeWithVal(0)
@@ -499,7 +517,7 @@ def test3():
     print(b0.in_order())
     print(b0.cyclic_succ())
     print(b0.successor())
-    
+
 if __name__ == "__main__":
-    test3()
+    test1()
     print("Done")

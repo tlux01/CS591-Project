@@ -15,7 +15,7 @@ class WBBTree(BBTree):
         self.sub_tree_weight = weight
 
     def __repr__(self):
-        return "(weight:{}, subtree weight:{})".format(self.weight, self.sub_tree_weight)
+        return "({}, {})".format(self.weight, self.sub_tree_weight)
     def set_weight(self,w):
         w_diff = w - self.weight
         self.weight = w
