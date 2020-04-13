@@ -30,7 +30,7 @@ class EulerTourTree(WBBTree):
 
     def __repr__(self):
         output_string = "ETT(node:{})".format(self.node)
-        # output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
+        #output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
         return output_string
 
     # acts as a second constructor, creates a new EulerTourTree occurrence from
@@ -49,6 +49,8 @@ class EulerTourTree(WBBTree):
         to.set_weight(self.weight)
         self.weight = 0
         self.dc.G.nodes[self.node]["data"].active_occ[self.level] = to
+
+
 
 
 ################# Static Methods for EulerTourTree ######################
@@ -73,10 +75,9 @@ def treeToETListHelper(dc, G, root, processedNodes, ETlist):
 def change_root(old_root, new_root, i, dc):
     # first node in inorder Traversal
     first_node = old_root.first()
-
     # if new_root is already the first node we are done
     if new_root is first_node:
-        return
+        return new_root
 
     # create new occurrence that will arise from changing root
     new_occ = new_root.create_new_occ()
@@ -198,7 +199,7 @@ def et_cut(e, i, dc):
     bbt.join(s1,s3,dc.et_dummy)
 
     s1,s2 = bbt.split(eb2, RIGHT, dc.et_dummy)
-    
+
     # update active occurrences
     if ea2.active:
         ea2.pass_activity(ea1)
@@ -228,18 +229,86 @@ def et_cut(e, i, dc):
 
 # contructs new euler tour from linking of nodes u and v,
 # need to make sure that u and v are initially disconnected
-def et_link(u, v, edge, i):
+# edge is of form (u, v)
+def et_link(u, v, edge, i, dc):
     # nodes u,v, i is the level, dc is the pointer to the DynamicCon object
 
-    # get active occurrence of the nodes
-    u_active = self.dc.G.nodes[u]["data"].active_occ[i]
-    v_active = self.dc.G.nodes[v]["data"].active_occ[i]
+    # get active occurence of the nodes
+    u_active = dc.G.nodes[u]["data"].active_occ[i]
+    v_active = dc.G.nodes[v]["data"].active_occ[i]
 
     new_u_occ = u_active.create_new_occ()
-    return
+
+    # et tree containing v_active
+    et_v = v_active.find_root()
+
+    #reroot et_v at v_active
+    et_v = change_root(et_v, v_active, i, dc)
+
+    # initialize first 2 of 4 tree occurences corresponding to this edge
+    dc.G.edges[edge]["data"].tree_occ[i][0] = u_active
+    dc.G.edges[edge]["data"].tree_occ[i][1] = new_u_occ
+
+    # get last in InOrder traversal of et_v, also since we rerooted (with respect
+    # to EulerTour, not the binary tree holding ET(v)) at v_active, we know that
+    # v_active = et_v = et_v.first()
+    et_v_last = et_v.last()
+    dc.G.edges[edge]["data"].tree_occ[i][3] = et_v_last
+    # if they are not the same occurence of the same node
+    if et_v_last is not v_active:
+        dc.G.edges[edge]["data"].tree_occ[i][2] = v_active
+    else:
+        dc.G.edges[edge]["data"].tree_occ[i][2] = None
+
+    # update tree occurences of our edge following our the edge after u
+    after_u_edge = u_active.edge_occurences[RIGHT]
+    if after_u_edge:
+        if u_active.edge_occurences[LEFT] != after_u_edge:
+            k = 0
+            # find pointer to u_active
+            while True:
+                if dc.G.edges[after_u_edge]["data"].tree_occ[i][k] is not u_active:
+                    k += 1
+                else:
+                    dc.G.edges[after_u_edge]["data"].tree_occ[i][k] = new_u_occ
+                    break
+        else:
+            k = 0
+            # find pointer to u_active
+            while True:
+                if dc.G.edges[after_u_edge]["data"].tree_occ[i][k] is not None:
+                    k += 1
+                else:
+                    dc.G.edges[after_u_edge]["data"].tree_occ[i][k] = new_u_occ
+                    break
+
+    # update edge_occurences
+    new_u_occ.edge_occurences[RIGHT] = u_active.edge_occurences[RIGHT]
+    new_u_occ.edge_occurences[LEFT] = edge
+
+    u_active.edge_occurences[RIGHT] = edge
+    v_active.edge_occurences[LEFT] = edge
+
+    et_v_last.edge_occurences[RIGHT] = edge
+
+
+    et_v = bbt.join(et_v, new_u_occ, dc.et_dummy)
+
+    s1, s2 = bbt.split(u_active, RIGHT, dc.et_dummy)
+
+    s3 = bbt.join(et_v, s2, dc.et_dummy)
+
+    et = bbt.join(s1, s3, dc.et_dummy)
+    return et
+
+
+
 
 
 ######################################################################
+
+
+
 
 
 class DynamicConNode():
@@ -270,6 +339,8 @@ class DynamicConEdge:
 
         # points to array for each level the 4 node occurrences in EulerTree that
         # represent this edge
+        # at each level the four occurences are ordered in the manner below
+        # [occurence of source of edge, occurence of source of edge, occurence of target of edge, occurence of target of edge]
         self.tree_occ = None
 
 
@@ -293,21 +364,21 @@ class DynamicCon:
         # this is l in the paper
         self.max_level = 6 * logn
         # counters for number of edges added to each level
-        self.added_edges = [0 for i in range(self.max_level + 1)]
+        self.added_edges = [0 for _ in range(self.max_level + 1)]
         # rebuild bound of last level, double it as we go up levels
         max_level_bound = 4
-        self.rebuild_bound = [max_level_bound * (2 ** (self.max_level - i)) for i in range(self.max_level + 1)]
+        self.rebuild_bound = [max_level_bound * (2**(self.max_level - i)) for _ in range(self.max_level + 1)]
 
         # edge lists is a list of lists, where each list is the set of edges
         # which we will represent as a tuple on a level
-        self.non_tree_edges = [[] for i in range(self.max_level + 1)]
-        self.tree_edges = [[] for i in range(self.max_level + 1)]
+        self.non_tree_edges = [[] for _ in range(self.max_level + 1)]
+        self.tree_edges = [[] for _ in range(self.max_level + 1)]
         self.et_dummy = EulerTourTree(self, None)
         g_nodes = self.G.nodes
         for node in g_nodes:
             g_nodes[node]["data"] = DynamicConNode()
-            g_nodes[node]["data"].active_occ = [None for i in range(self.max_level + 1)]
-            g_nodes[node]["data"].adjacent_edges = [None for i in range(self.max_level + 1)]
+            g_nodes[node]["data"].active_occ = [None for _ in range(self.max_level + 1)]
+            g_nodes[node]["data"].adjacent_edges = [None for _ in range(self.max_level + 1)]
             for level in range(self.max_level + 1):
                 # create euler tree data structure for each node, default it as active_occ
                 # as each node is its own EulerTree, thus only one node in the tour
@@ -316,10 +387,14 @@ class DynamicCon:
         g_edges = self.G.edges
         for edge in g_edges:
             g_edges[edge]["data"] = DynamicConEdge()
-        print(G.edges(data=True))
-
+            source = edge[0]
+            target = edge[1]
+            if not self.connected(source, target, 0):
+                self.insert_tree(edge, 0, True)
+            else:
+                self.insert_non_tree(edge, 0)
     # returns boolean of whether the two nodes are in the same tree and thus connected
-    def connected(self, u, v, i=None):
+    def connected(self, u, v, i = None):
         # if no level provided, assume max_level
         if i is None:
             i = self.max_level
@@ -329,15 +404,15 @@ class DynamicCon:
         v_active_occ = g_nodes[v]["data"].active_occ[i]
 
         # if they have the same root
-        return (u_active_occ.find_root() is v_active_occ.find_root())
+        return(u_active_occ.find_root() is v_active_occ.find_root())
 
     # Insert edge into F_i, the tree spanning Union G_j , j <= i, where i
     # is the level
-    def insert_tree(self, edge, i, create_tree_occ=False):
+    def insert_tree(self, edge, i, create_tree_occ = False):
         # create_tree_occ is to flag signifying if we need to construct list
         # tree_occ for the DynamicCon class
 
-        # endpoints
+        #endpoints
         u = edge[0]
         v = edge[1]
 
@@ -346,41 +421,42 @@ class DynamicCon:
 
         # create some empty lists
         if create_tree_occ:
-            # 4 node occurrences in EulerTree
-            self.G.edges[edge]["data"].tree_occ = [[None, None, None, None] for i in range(max_level + 1)]
+            # 4 node occurences in EulerTree
+            self.G.edges[edge]["data"].tree_occ = [[None, None, None, None] for _ in range(self.max_level + 1)]
 
         ###IMPLEMENT et_link
-
+        for j in range(i, self.max_level + 1):
+            et_link(u,v, edge, j, self)
         # edge now has pointer to DynamicCon's tree edges at level i,
         # and add edge to this list
         self.G.edges[edge]["data"].tree_level_edges = self.tree_edges[i].append(edge)
 
+    def insert_non_tree(self, edge, i):
+        return
 
 def test1():
     G = nx.Graph()
-    for i in range(3):
+    for i in range(2):
         G.add_node(i)
-    G.add_edge(0, 1)
-    G.add_edge(1, 2)
-    p = DynamicCon(G)
-    # print(p.G.nodes(data = True))
+    G.add_edge(0,1)
+    D = DynamicCon(G)
+    print(D.tree_edges)
 
-    e1 = EulerTourTree(p, 1, 10, True)
-    e2 = e1.create_new_occ()
-    print(e1, e2)
-    print(e1 is e2)
+
+    #print(p.G.nodes(data = True))
+
 
 
 def test2():
     G = nx.Graph()
     for i in range(3):
         G.add_node(i)
-    G.add_edge(0, 1)
-    G.add_edge(1, 2)
+    G.add_edge(0,1)
+    G.add_edge(1,2)
     p = DynamicCon(G)
 
     print(str(treeToETList(p, G, i)))
 
 
 if __name__ == "__main__":
-    test2()
+    test1()
