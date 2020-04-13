@@ -362,13 +362,19 @@ class DynamicCon:
 
 def test1():
     G = nx.Graph()
-    for i in range(2):
+    for i in range(4):
         G.add_node(i)
     G.add_edge(0,1)
+    G.add_edge(0,3)
+    G.add_edge(0,2)
+
     D = DynamicCon(G)
-    print(D.tree_edges)
-
-
+    et_node_0_level_0 = D.G.nodes[0]["data"].active_occ[0]
+    print(et_node_0_level_0)
+    et_root_0 = et_node_0_level_0.find_root()
+    print(et_root_0)
+    print("ET(T) on level 0")
+    print(et_root_0.in_order())
     #print(p.G.nodes(data = True))
 
 
