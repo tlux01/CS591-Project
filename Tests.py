@@ -31,6 +31,7 @@ def getRandomNotConnectedNodes(G):
 
 def test1(n,p):
     G = nx.gnp_random_graph(n,p)
+    print("G has {} connected components")
     DC = DynamicCon(G)
     N = 100
     allTrues1 = [False]*N
