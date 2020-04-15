@@ -30,8 +30,9 @@ def getRandomNotConnectedNodes(G):
     return node1, node2
 
 def test1(n,p):
+    """tests DC and BFS-based connectivity alg on a G(n,p)"""
     G = nx.gnp_random_graph(n,p)
-    print("G has {} connected components")
+    print("G has {} connected components".format(nx.number_connected_components(G)))
     DC = DynamicCon(G)
     N = 100
     allTrues1 = [False]*N
@@ -53,6 +54,11 @@ def test1(n,p):
     print("The BFS-based alg works correctly = " + str(True not in allFalses1))
     print("The DC-based alg works correctly = " + str(True not in allFalses2))
 
+def test2():
+    """tests DC with adding and removing edges"""
+    # TODO
+
 if __name__ == "__main__":
-    test1(200,0.05)
+    n = 200
+    test1(n, 2/n)
     print("Done")
