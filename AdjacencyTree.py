@@ -23,16 +23,13 @@ class AdjacencyTree(WBBTree):
         aux = AdjacencyTree(e)
         return BBTree.join(self,aux,dummy)
 
+    def delete(self, dummy):
+        '''delete the self node'''
 
-def delete(node, dummy):
-    '''delete node'''
-
-    t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)
-    # UNCOMMENT THIS LINE AFTER:
-    t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)
-    return BBTree.join(t1,t2,dummy)
-
-
+        t1, t2 = BBTree.split(self, BBTree.LEFT, dummy)
+        t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)	        # UNCOMMENT THIS LINE AFTER:
+        # UNCOMMENT THIS LINE AFTER:	        t3, t2 = BBTree.split(self, BBTree.RIGHT, dummy)
+        t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)	        return BBTree.join(t1,t2,dummy)
 
 ################### Test ###################################################
 def test1():
