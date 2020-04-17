@@ -24,7 +24,7 @@ class WBBTree(BBTree):
         while(aux):
             aux.sub_tree_weight += w_diff
             aux = aux.parent
-    def add_weight(a):
+    def add_weight(self, a):
         self.set_weight(self.weight+a)
     # these functions fix the weights
     def after_rot(self):
