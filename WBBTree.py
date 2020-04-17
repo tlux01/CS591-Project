@@ -63,7 +63,7 @@ class WBBTree(BBTree):
 ################### STATIC METHODS to operate on our WBBTree #########################
 
 # return the node of tree t that corresponds to w wrt In-order
-def locate(t, w, offset):
+def locate(t, w):
     curr_node = t
     left = curr_node.child[LEFT]
     lower = left.sub_tree_weight if curr_node.child[LEFT] else 0
