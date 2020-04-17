@@ -87,7 +87,7 @@ def locate(t, w, offset):
             upper = lower + curr_node.weight
 
     # in the paper they store w - lower in offset. Python has no such ability
-    return curr_node, w - offset
+    return curr_node, w - lower
 
 def print_tree(root):
     h = bbt.height(root)
