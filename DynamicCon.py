@@ -2,7 +2,7 @@ import networkx as nx
 
 from WBBTree import WBBTree
 from AdjacencyTree import AdjacencyTree
-
+import AdjacencyTree as adt
 from BBTree import BBTree
 import BBTree as bbt
 
@@ -29,7 +29,7 @@ class EulerTourTree(WBBTree):
         self.edge_occurrences = [None, None]
 
     def __repr__(self):
-        output_string = "ETT(node:{})".format(self.node)
+        output_string = "ETT(node:{}, eo:{})".format(self.node, self.edge_occurrences)
         #output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
         return output_string
 
@@ -315,6 +315,7 @@ class DynamicConNode():
     def __init__(self):
         # list of EulerTree
         self.active_occ = None
+        # adjacency tree of non tree edges connected to this node
         self.adjacent_edges = None
 
     def __repr__(self):
@@ -325,16 +326,17 @@ class DynamicConEdge:
     def __init__(self):
         self.level = None
 
-        # points to non_tree_edges[level], if this is a tree edge
-        # then this is none
+        # the edge that is within none_tree_edges[level]
+        # None if tree edge
         self.non_tree_level_edges = None
 
-        # points to tree_edges[level], if this is a non tree edge
-        # then this is none
+        # the edge that is within tree_edges[level]
+        # None if non tree edge
         self.tree_level_edges = None
 
         # points to the two ed_nodes corresponding to this edge, are
-        # none if this is a tree edge
+        # none if this is a tree edge, 0th index is source of edge, 1st
+        # index is target of edge
         self.non_tree_occ = [None, None]
 
         # points to array for each level the 4 node occurrences in EulerTree that
@@ -373,7 +375,10 @@ class DynamicCon:
         # which we will represent as a tuple on a level
         self.non_tree_edges = [[] for _ in range(self.max_level + 1)]
         self.tree_edges = [[] for _ in range(self.max_level + 1)]
+
+
         self.et_dummy = EulerTourTree(self, None)
+        self.ed_dummy = adt.AdjacencyTree(-1)
         g_nodes = self.G.nodes
         for node in g_nodes:
             g_nodes[node]["data"] = DynamicConNode()
@@ -391,8 +396,20 @@ class DynamicCon:
             target = edge[1]
             if not self.connected(source, target, 0):
                 self.insert_tree(edge, 0, True)
+
             else:
+
                 self.insert_non_tree(edge, 0)
+
+
+    # returns true if edge is a tree edge in some F_i
+    def tree_edge(self, edge):
+        return self.G.edges[edge]["data"].tree_occ is None
+
+    # returns level that edge is in (i in G_i)
+    def level(self, edge):
+        return self.G.edges[edge]["data"].level
+
     # returns boolean of whether the two nodes are in the same tree and thus connected
     def connected(self, u, v, i = None):
         # if no level provided, assume max_level
@@ -429,10 +446,35 @@ class DynamicCon:
             et_link(u,v, edge, j, self)
         # edge now has pointer to DynamicCon's tree edges at level i,
         # and add edge to this list
-        self.G.edges[edge]["data"].tree_level_edges = self.tree_edges[i].append(edge)
+        self.tree_edges[i].append(edge)
+        self.G.edges[edge]["data"].tree_level_edges =  edge
+
 
     def insert_non_tree(self, edge, i):
-        return
+
+        #set level of edge to i
+        self.G.edges[edge]["data"].level = i
+
+        source = edge[0]
+        target = edge[1]
+
+        #need to initialize if none
+        if self.G.nodes[source]["data"].adjacent_edges[i] is None:
+            self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_insert(self.G.nodes[source]["data"].adjacent_edges[i], edge, self.ed_dummy)
+        if self.G.nodes[target]["data"].adjacent_edges[i] is None:
+            self.G.nodes[target]["data"].adjacent_edges[i] = adt.adj_insert(self.G.nodes[target]["data"].adjacent_edges[i], edge, self.ed_dummy)
+
+        #insert edge into adjacency tree of edge,
+        self.G.edges[edge]["data"].non_tree_occ[0] = adt.adj_insert(self.G.nodes[source]["data"].adjacent_edges[i], edge, self.ed_dummy)
+        self.G.edges[edge]["data"].non_tree_occ[1] = adt.adj_insert(self.G.nodes[target]["data"].adjacent_edges[i], edge, self.ed_dummy)
+
+        # append edge DynCon's non-tree edges on level i
+        self.non_tree_edges[i].append(edge)
+        self.G.edges[edge]["data"].non_tree_level_edges = edge
+
+        # increase weight of active occurences of source and target nodes at level i
+        self.G.nodes[source]["data"].active_occ[i].add_weight(1)
+        self.G.nodes[target]["data"].active_occ[i].add_weight(1)
 
 def test1():
     G = nx.Graph()
@@ -441,16 +483,15 @@ def test1():
     G.add_edge(0,1)
     G.add_edge(0,3)
     G.add_edge(0,2)
-
+    G.add_edge(3,2)
+    G.add_edge(3,1)
     D = DynamicCon(G)
+    print(D.G.edges)
     et_node_0_level_0 = D.G.nodes[0]["data"].active_occ[0]
-    print(et_node_0_level_0)
     et_root_0 = et_node_0_level_0.find_root()
-    print(et_root_0)
-    print("ET(T) on level 0")
     print(et_root_0.in_order())
-    #print(p.G.nodes(data = True))
-
+    adj = D.G.edges[(3,2)]["data"].non_tree_occ[1]
+    print(adj.in_order())
 
 
 def test2():
