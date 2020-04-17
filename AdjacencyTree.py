@@ -18,18 +18,21 @@ class AdjacencyTree(WBBTree):
         #                                             self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
         #return "({}, {})".format(self.weight, self.edge)
         return str(self.edge)
-    def insert(self, e, dummy):
-        '''return self with inserted edge (a,b)'''
-        aux = AdjacencyTree(e)
-        return BBTree.join(self,aux,dummy)
 
-    def delete(self, dummy):
-        '''delete the self node'''
+######################### Static Methods fo AdjacencyTree #############################
+def adj_insert(adt, e, dummy):
+    '''return self with inserted edge (a,b)'''
+    aux = AdjacencyTree(e)
+    # if adt is None, join handles this by returning aux
+    return BBTree.join(adt,aux,dummy)
 
-        t1, t2 = BBTree.split(self, BBTree.LEFT, dummy)
-        t1, t2 = BBTree.split(node, BBTree.LEFT, dummy)	        # UNCOMMENT THIS LINE AFTER:
-        # UNCOMMENT THIS LINE AFTER:	        t3, t2 = BBTree.split(self, BBTree.RIGHT, dummy)
-        t3, t2 = BBTree.split(node, BBTree.RIGHT, dummy)	        return BBTree.join(t1,t2,dummy)
+def adj_delete(adt, dummy):
+    '''delete the self node'''
+
+    t1, t2 = BBTree.split(adt, BBTree.LEFT, dummy)
+
+    t3, t2 = BBTree.split(adt, BBTree.RIGHT, dummy)
+    return BBTree.join(t1,t2,dummy)
 
 ################### Test ###################################################
 def test1():
