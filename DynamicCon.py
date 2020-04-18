@@ -511,7 +511,7 @@ class DynamicCon:
             self.G.nodes[source]["data"].active_occ[i].add_weight(-1)
         if self.G.nodes[target]["data"].active_occ[i]:
             self.G.nodes[target]["data"].active_occ[i].add_weight(-1)
-                                                                         
+
     def sample_and_test(self, et_tree, i):
         ''' Randomly select a non_tree edge of G_i (level i) with at least one endpoint
             in our EulerTourTree et_tree, then check if this edge has exactly one endpoint in
@@ -576,8 +576,25 @@ class DynamicCon:
 
         # starting from lowest level, which is max_level, and ending at i
         for j in range(self.max_level, i - 1 ,-1):
-            edge = self.non_tree_edges[j][0]
+            while len(self.non_tree_edges[j]) > 0:
 
+                edge = self.non_tree_edges[j][0]
+                self.delete_non_tree(edge)
+                self.insert_non_tree(edge, i-1)
+
+            while len(self.tree_edges[j]) > 0:
+
+                edge = self.tree_edges[j][0]
+                self.tree_edges[j].remove(edge)
+                self.tree_edges[i-1].append(edge)
+                self.G.edges[edge]["data"].tree_level_edge = edge
+                self.G.edges[edge]["data"].level = i - 1
+
+                source = edge[0]
+                target = edge[1]
+                for k in range(i-1, j):
+                    et_link(source, target, edge, k, self)
+                    
 def test1():
     G = nx.Graph()
     for i in range(4):
