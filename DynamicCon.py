@@ -1,6 +1,8 @@
 import networkx as nx
+import random
 
 from WBBTree import WBBTree
+import WBBTree as wbbt
 from AdjacencyTree import AdjacencyTree
 import AdjacencyTree as adt
 from BBTree import BBTree
@@ -328,11 +330,11 @@ class DynamicConEdge:
 
         # the edge that is within none_tree_edges[level]
         # None if tree edge
-        self.non_tree_level_edges = None
+        self.non_tree_level_edge = None
 
         # the edge that is within tree_edges[level]
         # None if non tree edge
-        self.tree_level_edges = None
+        self.tree_level_edge = None
 
         # points to the two ed_nodes corresponding to this edge, are
         # none if this is a tree edge, 0th index is source of edge, 1st
@@ -447,8 +449,18 @@ class DynamicCon:
         # edge now has pointer to DynamicCon's tree edges at level i,
         # and add edge to this list
         self.tree_edges[i].append(edge)
-        self.G.edges[edge]["data"].tree_level_edges =  edge
+        self.G.edges[edge]["data"].tree_level_edge =  edge
 
+    def delete_tree(self, edge):
+        i = self.level(edge)
+        # in all levels higher (sparser cuts) remove from EulerTourTree F_j
+        for j in range(i, self.max_level + 1):
+            et_cut(edge, j, self)
+
+        #remove edge from out list
+        self.tree_edges[i].remove(edge)
+
+        self.G.edges[edge].tree_level_edge = None
 
     def insert_non_tree(self, edge, i):
 
@@ -470,11 +482,101 @@ class DynamicCon:
 
         # append edge DynCon's non-tree edges on level i
         self.non_tree_edges[i].append(edge)
-        self.G.edges[edge]["data"].non_tree_level_edges = edge
+        self.G.edges[edge]["data"].non_tree_level_edge = edge
 
         # increase weight of active occurences of source and target nodes at level i
         self.G.nodes[source]["data"].active_occ[i].add_weight(1)
         self.G.nodes[target]["data"].active_occ[i].add_weight(1)
+
+    def delete_non_tree(self, edge):
+
+        i = self.level(edge)
+        source = edge[0]
+        target = edge[1]
+
+        # remove edge from source and target adjacency trees
+        self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_delete(self.G.nodes[source]["data"].adjacent_edges[i],
+                                                                        self.G.edges[edge]["data"].non_tree_occ[0],
+                                                                        self.ed_dummy)
+        self.G.edges[edge]["data"].non_tree_occ[0] = None
+        self.G.nodes[target]["data"].adjacent_edges[i] = adt.adj_delete(self.G.nodes[target]["data"].adjacent_edges[i],
+                                                                        self.G.edges[edge]["data"].non_tree_occ[1],
+                                                                        self.ed_dummy)
+        self.G.edges[edge]["data"].non_tree_occ[1] = None
+
+        self.non_tree_edges[i].remove(edge)
+        self.G.edges[edge]["data"].non_tree_level_edge = None
+
+        if self.G.nodes[source]["data"].active_occ[i]:
+            self.G.nodes[source]["data"].active_occ[i].add_weight(-1)
+        if self.G.nodes[target]["data"].active_occ[i]:
+            self.G.nodes[target]["data"].active_occ[i].add_weight(-1)
+                                                                         
+    def sample_and_test(self, et_tree, i):
+        ''' Randomly select a non_tree edge of G_i (level i) with at least one endpoint
+            in our EulerTourTree et_tree, then check if this edge has exactly one endpoint in
+            et_tree. Note that this is called after a deletion of an edge, meaing we have
+            a disconnected tree
+        '''
+        # weight represents number of adjacent non tree edges
+        # where we double count those with two endpoint in et_tree
+        tree_weight = et_tree.sub_tree_weight
+
+        rand_et_num = random.randint(1, tree_weight)
+
+        # EulerTourTree node corresponding to our random number
+        et_node, offset = wbbt.locate(et_tree, rand_et_num)
+
+        # get node
+        u = et_node.node
+
+        # get the AdjacencyTree node corresponding to returned offset
+        adj_node, _ = wbbt.locate(self.G.nodes[u]["data"], offset)
+        edge = adj_node.edge
+
+        v = edge[1] if (u == edge[0]) else edge[0]
+
+        print("sample and test gave us edge:", edge)
+
+        if self.connected(u,v,i):
+            return None
+        else:
+            return edge
+
+    # adj is of type AdjacencyTree
+    def traverse_edges(self, adj_node, edge_list):
+
+        if adj:
+            edge = adj_node.edge
+            i = self.level(edge)
+            source = edge[0]
+            target = edge[1]
+            # we want edges with only one edge in current spanning tree
+            if not self.connected(source, target, i):
+                edge_list.append(edge)
+
+            traverse_edges(adj_node.child[LEFT], edge_list)
+            traverse_edges(adj_node.child[RIGHT], edge_list)
+
+    # return edges with exactly one endpoint in et_tree rooted at et_node
+    # edge list is mutable list so no need to return updates will propegate
+    def get_cut_edges(et_node, level, edge_list):
+        if et_node and et_node.sub_tree_weight > 0:
+            u = et_node.node
+            # only look at active so we dont double count
+            if u.active:
+                traverse_edges(self.G.nodes[u]["data"].adjacent_edges[level], edge_list)
+            # traverse through all nodes in EulerTourTree
+            get_cut_edges(et_node.child[LEFT], level, edge_list)
+            get_cut_edges(et_node.child[RIGHT], level, edge_list)
+
+    # for j >= i, insert all edges of each F_j into F_(i-1), and all non tree
+    # edges of G_j into G_(i-1), this is used in a rebuild
+    def move_edges(self, i):
+
+        # starting from lowest level, which is max_level, and ending at i
+        for j in range(self.max_level, i - 1 ,-1):
+            edge = self.non_tree_edges[j][0]
 
 def test1():
     G = nx.Graph()
@@ -493,6 +595,13 @@ def test1():
     adj = D.G.edges[(3,2)]["data"].non_tree_occ[1]
     print(adj.in_order())
 
+    et_cut((0,2), 0, D)
+    et_node_0_level_0 = D.G.nodes[0]["data"].active_occ[0]
+    et_root_0 = et_node_0_level_0.find_root()
+    print(et_root_0.in_order())
+
+    et_node_2_level_0 = D.G.nodes[2]["data"].active_occ[0]
+    print(et_node_2_level_0.in_order())
 
 def test2():
     G = nx.Graph()
