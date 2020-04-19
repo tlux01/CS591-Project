@@ -406,7 +406,7 @@ class DynamicCon:
 
     # returns true if edge is a tree edge in some F_i
     def tree_edge(self, edge):
-        return self.G.edges[edge]["data"].tree_occ is None
+        return self.G.edges[edge]["data"].tree_occ is not None
 
     # returns level that edge is in (i in G_i)
     def level(self, edge):
@@ -594,7 +594,146 @@ class DynamicCon:
                 target = edge[1]
                 for k in range(i-1, j):
                     et_link(source, target, edge, k, self)
-                    
+
+    # does a rebuild at level i, if neeeded
+    def rebuild(self, i):
+        # rebuild at level 3 or higher only
+        if (i < 3):
+            return
+        total_added_edges = 0
+        for j in range(i, self.max_level + 1):
+            total_added_edges += self.added_edges[j]
+
+        # now check if total added edges is larger than our rebuild bound
+        if total_added_edges > self.rebuild_bound[i]:
+            self.move_edges(i)
+            for j in range(i, self.max_level + 1):
+                self.added_edges[j] = 0
+
+    # after deletion of tree edge, try to reconnect trees on level i containing
+    # node u and v, if not possible recurse on higher level
+    def replace(self, u, v, i):
+        # get EulerTourTree roots of u and v
+        t1 = self.G.nodes[u]["data"].active_occ[i].find_root()
+        t2 = self.G.nodes[v]["data"].active_occ[i].find_root()
+
+        # assign t1 to be the smaller tree
+        if t1.sub_tree_weight > t2.sub_tree_weight:
+            t1 = t2
+
+        sample_success = True
+        # if weight is large enough, sample at most sample_size
+        if t1.sub_tree_weight > self.small_weight:
+            replacement_found = False
+            sample_count = 0
+            while not replacement_found and sample_count < self.sample_size:
+                edge = sample_and_test(t1,i)
+                # if sample_and_test returns an edge and not None
+                if edge:
+                    replacement_found = True
+
+            # sampling was successful
+            if edge:
+                self.delete_non_tree(e)
+                self.insert_tree(e, i, True)
+
+            else:
+                sample_success = False
+        # weight of t1 too small to sample
+        else:
+            sample_success = False
+
+        if not sample_success:
+            # find all cut edges
+            cut_edges = []
+            if t1.sub_tree_weight > 0:
+                self.get_cut_edges(t1, i, cut_edges)
+            if len(cut_edges) == 0:
+                # recurse on above level
+                if (i < self.max_level):
+                    self.replace(u, v, i+1)
+            else:
+                # see if cut set is large enough
+                if len(cut_edges) >= (t1.sub_tree_weight/ self.small_set):
+                    #doesn't matter which edge we take, so for simplicity take first
+                    reconnect_edge = cut_edges[0]
+                    self.delete_non_tree(reconnect_edge)
+                    self.insert_tree(reconnect_edge, i, True)
+                # too few edges crossing our cut
+                else:
+                    reconnect_edge = cut_edges[0]
+                    self.delete_non_tree(reconnect_edge)
+                    if i < self.max_level:
+                        # move edge to above level
+                        insert_tree(reconnect_edge, i+1,True)
+                        self.added_edges[i+1] += 1
+                        # remove edge we just inserted into tree above
+                        cut_edges = cut_edges[1:]
+                        for edge in cut_edges:
+                            self.delete_non_tree(edge)
+                            self.insert_non_tree(edge, i+1)
+                            self.added_edges[i+1] += 1
+                        self.rebuild(i+1)
+                    else:
+                        insert_tree(reconnect_edge,i, True)
+    # function user can call to delete an edge in our graph G
+    def del(self, edge):
+        if not tree_edge(edge):
+            self.delete_non_tree(edge)
+        else:
+            i = self.level(edge)
+            source = edge[0]
+            target = edge[1]
+
+            self.delete_tree(edge)
+
+            # not sure if this is needed to fix references
+            for j in range(0, self.max_level + 1):
+                self.G.edges[e]["data"].tree_occ[j] = None
+            self.G.edges[e]["data"].tree_occ = None
+
+            self.replace(source, target, i)
+
+        # remove edge from graph
+        self.G.remove_edge(source, target)
+
+    # function user can call to insert an edge from u to v in our graph G
+    def ins(self, u, v):
+
+        #maybe add something to check if edge already exists, dont want to overwrite
+
+
+        self.G.add_edge(u,v)
+        edge = (u,v)
+        self.G.edges[edge]["data"] = DynamicConEdge()
+
+        if not self.connected(u,v, self.max_level):
+            self.insert_tree(edge, self.max_level, True)
+            self.added_edges[self.max_level] += 1
+            self.rebuild(self.max_level)
+        else:
+            # binary search through levels
+            curr_level = self.max_level // 2
+            lower = 0
+            upper = self.max_level
+            while curr_level != lower:
+                if self.connected(u,v, curr_level):
+                    upper = curr_level
+                    curr_level = (lower + curr_level)//2
+                else:
+                    lower = curr_level
+                    curr_level = (upper + curr_level) //2
+
+        # we have two possible cases that result from this search
+        # either connected(u,v,lower) is true or either connected(u,v,lower+1)
+        if not connected(u,v,lower):
+            lower += 1
+        self.insert_non_tree(edge, lower)
+        self.added_edges[lower] += 1
+        self.rebuild(lower)
+
+        return edge
+
 def test1():
     G = nx.Graph()
     for i in range(4):
