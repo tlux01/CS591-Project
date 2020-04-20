@@ -115,10 +115,14 @@ def change_root(old_root, new_root, i, dc):
 
     # edge is represented by tuple
     first_edge = first_node.edge_occurrences[RIGHT]
+    # print('first_edge:', first_edge)
     if first_edge != last_node.edge_occurrences[LEFT] or new_root is last_node:
         k = 0
         # find pointer to first node
+        # print("First Node:", first_node)
         while True:
+            # print(k)
+            # print(dc.G.edges[first_edge]["data"].tree_occ[i][k])
             if dc.G.edges[first_edge]["data"].tree_occ[i][k] is not first_node:
                 k += 1
             else:
@@ -211,14 +215,20 @@ def et_cut(e, i, dc):
     if after_e:
         if ea1.edge_occurrences[LEFT] != after_e: # replace ea2 by ea1
             k = 0
-            while ea2 != dc.G.edges[after_e]["data"].tree_occ[i][k]:
-                dc.G.edges[after_e]["data"].tree_occ[i][k] = ea1
-                k += 1
+            while True:
+                if dc.G.edges[after_e]["data"].tree_occ[i][k] is not ea2:
+                    k += 1
+                else:
+                    dc.G.edges[after_e]["data"].tree_occ[i][k] = ea1
+                    break
         else: # replace ea2 by None
             k = 0
-            while ea2 != dc.G.edges[after_e]["data"].tree_occ[i][k]:
-                dc.G.edges[after_e]["data"].tree_occ[i][k] = None
-                k += 1
+            while True:
+                if dc.G.edges[after_e]["data"].tree_occ[i][k] is not ea2:
+                    k += 1
+                else:
+                    dc.G.edges[after_e]["data"].tree_occ[i][k] = None
+                    break
     # update edge_occurrences
     ea1.edge_occurrences[RIGHT] = ea2.edge_occurrences[RIGHT]
     if eb1:
@@ -243,7 +253,9 @@ def et_link(u, v, edge, i, dc):
 
     # et tree containing v_active
     et_v = v_active.find_root()
-
+    # print("in_order after delete:", et_v.in_order())
+    # print("old_root,", et_v)
+    # print("new_root,", v_active)
     #reroot et_v at v_active
     et_v = change_root(et_v, v_active, i, dc)
 
@@ -301,6 +313,9 @@ def et_link(u, v, edge, i, dc):
     s3 = bbt.join(et_v, s2, dc.et_dummy)
 
     et = bbt.join(s1, s3, dc.et_dummy)
+
+    # if edge == (0,3) and i ==0:
+    #     print("Update to edge (0,3):", dc.G.edges[edge]["data"].tree_occ[i])
     return et
 
 
@@ -444,6 +459,7 @@ class DynamicCon:
             self.G.edges[edge]["data"].tree_occ = [[None, None, None, None] for _ in range(self.max_level + 1)]
 
         ###IMPLEMENT et_link
+        # print("insert_tree, u:{}, v:{}".format(u,v))
         for j in range(i, self.max_level + 1):
             et_link(u,v, edge, j, self)
         # edge now has pointer to DynamicCon's tree edges at level i,
@@ -460,7 +476,7 @@ class DynamicCon:
         #remove edge from out list
         self.tree_edges[i].remove(edge)
 
-        self.G.edges[edge].tree_level_edge = None
+        self.G.edges[edge]["data"].tree_level_edge = None
 
     def insert_non_tree(self, edge, i):
 
@@ -536,7 +552,7 @@ class DynamicCon:
 
         v = edge[1] if (u == edge[0]) else edge[0]
 
-        print("sample and test gave us edge:", edge)
+        # print("sample and test gave us edge:", edge)
 
         if self.connected(u,v,i):
             return None
@@ -546,7 +562,7 @@ class DynamicCon:
     # adj is of type AdjacencyTree
     def traverse_edges(self, adj_node, edge_list):
 
-        if adj:
+        if adj_node:
             edge = adj_node.edge
             i = self.level(edge)
             source = edge[0]
@@ -555,20 +571,20 @@ class DynamicCon:
             if not self.connected(source, target, i):
                 edge_list.append(edge)
 
-            traverse_edges(adj_node.child[LEFT], edge_list)
-            traverse_edges(adj_node.child[RIGHT], edge_list)
+            self.traverse_edges(adj_node.child[LEFT], edge_list)
+            self.traverse_edges(adj_node.child[RIGHT], edge_list)
 
     # return edges with exactly one endpoint in et_tree rooted at et_node
     # edge list is mutable list so no need to return updates will propegate
-    def get_cut_edges(et_node, level, edge_list):
+    def get_cut_edges(self, et_node, level, edge_list):
         if et_node and et_node.sub_tree_weight > 0:
             u = et_node.node
             # only look at active so we dont double count
-            if u.active:
-                traverse_edges(self.G.nodes[u]["data"].adjacent_edges[level], edge_list)
+            if et_node.active:
+                self.traverse_edges(self.G.nodes[u]["data"].adjacent_edges[level], edge_list)
             # traverse through all nodes in EulerTourTree
-            get_cut_edges(et_node.child[LEFT], level, edge_list)
-            get_cut_edges(et_node.child[RIGHT], level, edge_list)
+            self.get_cut_edges(et_node.child[LEFT], level, edge_list)
+            self.get_cut_edges(et_node.child[RIGHT], level, edge_list)
 
     # for j >= i, insert all edges of each F_j into F_(i-1), and all non tree
     # edges of G_j into G_(i-1), this is used in a rebuild
@@ -658,6 +674,7 @@ class DynamicCon:
                     #doesn't matter which edge we take, so for simplicity take first
                     reconnect_edge = cut_edges[0]
                     self.delete_non_tree(reconnect_edge)
+                    # print("reconnect_edge:", reconnect_edge)
                     self.insert_tree(reconnect_edge, i, True)
                 # too few edges crossing our cut
                 else:
@@ -677,8 +694,8 @@ class DynamicCon:
                     else:
                         insert_tree(reconnect_edge,i, True)
     # function user can call to delete an edge in our graph G
-    def del(self, edge):
-        if not tree_edge(edge):
+    def del_edge(self, edge):
+        if not self.tree_edge(edge):
             self.delete_non_tree(edge)
         else:
             i = self.level(edge)
@@ -689,8 +706,8 @@ class DynamicCon:
 
             # not sure if this is needed to fix references
             for j in range(0, self.max_level + 1):
-                self.G.edges[e]["data"].tree_occ[j] = None
-            self.G.edges[e]["data"].tree_occ = None
+                self.G.edges[edge]["data"].tree_occ[j] = None
+            self.G.edges[edge]["data"].tree_occ = None
 
             self.replace(source, target, i)
 
@@ -744,20 +761,14 @@ def test1():
     G.add_edge(3,2)
     G.add_edge(3,1)
     D = DynamicCon(G)
-    print(D.G.edges)
-    et_node_0_level_0 = D.G.nodes[0]["data"].active_occ[0]
-    et_root_0 = et_node_0_level_0.find_root()
-    print(et_root_0.in_order())
-    adj = D.G.edges[(3,2)]["data"].non_tree_occ[1]
-    print(adj.in_order())
+    print("Current ETT:", D.G.nodes[0]["data"].active_occ[0].find_root().in_order())
+    print("Edge:{}, Tree Occ:{}".format((0,1), D.G.edges[(0,1)]["data"].tree_occ[0]))
+    print("Edge:{}, Tree Occ:{}".format((0,3), D.G.edges[(0,3)]["data"].tree_occ[0]))
+    print("Edge:{}, Tree Occ:{}".format((0,2), D.G.edges[(0,2)]["data"].tree_occ[0]))
 
-    et_cut((0,2), 0, D)
-    et_node_0_level_0 = D.G.nodes[0]["data"].active_occ[0]
-    et_root_0 = et_node_0_level_0.find_root()
-    print(et_root_0.in_order())
+    D.del_edge((0,2))
+    print("Current ETT:", D.G.nodes[0]["data"].active_occ[0].find_root().in_order())
 
-    et_node_2_level_0 = D.G.nodes[2]["data"].active_occ[0]
-    print(et_node_2_level_0.in_order())
 
 def test2():
     G = nx.Graph()
