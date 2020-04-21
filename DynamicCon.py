@@ -741,13 +741,13 @@ class DynamicCon:
                     lower = curr_level
                     curr_level = (upper + curr_level) //2
 
-        # we have two possible cases that result from this search
-        # either connected(u,v,lower) is true or either connected(u,v,lower+1)
-        if not self.connected(u, v, lower):
-            lower += 1
-        self.insert_non_tree(edge, lower)
-        self.added_edges[lower] += 1
-        self.rebuild(lower)
+            # we have two possible cases that result from this search
+            # either connected(u,v,lower) is true or either connected(u,v,lower+1)
+            if not self.connected(u, v, lower):
+                lower += 1
+            self.insert_non_tree(edge, lower)
+            self.added_edges[lower] += 1
+            self.rebuild(lower)
 
         return edge
 

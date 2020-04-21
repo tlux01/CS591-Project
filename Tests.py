@@ -62,7 +62,7 @@ def test1(n,p):
 def test2():
     """tests DC with adding edges on n nodes"""
     G = nx.Graph()
-    for i in range(3):
+    for i in range(4):
         G.add_node(i)
     DC = DynamicCon(G)
     DC.ins(0,1)
@@ -70,11 +70,13 @@ def test2():
     print("DC works correctly wrt insertion = {}".format(DC.connected(0,1)))
     print("DC works correctly wrt insertion = {}".format(DC.connected(0, 2)))
     print("DC works correctly wrt insertion = {}".format(not DC.connected(1, 3)))
-    DC.del_edge(0,1)
+    DC.del_edge((0,1))
     print("DC works correctly wrt deletion = {}".format(DC.connected(1,2)))
     print("DC works correctly wrt deletion = {}".format(not DC.connected(0,1)))
     DC.ins(0, 1)
+    print("edge are: {}".format(G.edges))
     print("DC works correctly wrt insertion = {}".format(DC.connected(0, 1)))
+    print("DC works correctly wrt insertion = {}".format(DC.connected(1,2)))
     print("DC works correctly wrt insertion = {}".format(DC.connected(0, 2)))
     print("DC works correctly wrt insertion = {}".format(not DC.connected(1, 3)))
 
