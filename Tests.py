@@ -91,8 +91,24 @@ def test2():
     print("DC works correctly wrt insertion = {}".format(DC.connected(0, 2)))
     print("DC works correctly wrt insertion = {}".format(not DC.connected(1, 3)))
 
+def test3():
+    G = nx.Graph()
+    for i in range(3):
+        G.add_node(i)
+    DC = DynamicCon(G)
+    DC.ins(0, 1)
+    DC.ins(1, 2)
+    DC.del_edge((0,1))
+    DC.ins(0,1)
+    print("edges: {}".format(G.edges))
+    u = 1
+    v = 2
+    g_nodes = DC.G.nodes
+    print("In-order of the tree containing {}: {}".format(u, g_nodes[u]["data"].active_occ[DC.max_level].find_root().in_order()))
+    print("In-order of the tree containing {}: {}".format(v, g_nodes[v]["data"].active_occ[DC.max_level].find_root().in_order()))
+
 if __name__ == "__main__":
     n = 200
     # test1(n, 2/n)
-    test2()
+    test3()
     print("Done")
