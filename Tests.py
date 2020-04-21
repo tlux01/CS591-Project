@@ -67,6 +67,7 @@ def test2():
     DC = DynamicCon(G)
     DC.ins(0,1)
     DC.ins(1,2)
+    print("edge are: {}".format(G.edges))
     print("DC works correctly wrt insertion = {}".format(DC.connected(0,1)))
     print("DC works correctly wrt insertion = {}".format(DC.connected(0, 2)))
     print("DC works correctly wrt insertion = {}".format(not DC.connected(1, 3)))
