@@ -77,9 +77,11 @@ def treeToETListHelper(dc, G, root, processedNodes, ETlist):
 def change_root(old_root, new_root, i, dc):
     # first node in inorder Traversal
     first_node = old_root.first()
+
+
     # if new_root is already the first node we are done
     if new_root is first_node:
-        return new_root
+        return old_root
 
     # create new occurrence that will arise from changing root
     new_occ = new_root.create_new_occ()
@@ -248,17 +250,17 @@ def et_link(u, v, edge, i, dc):
     # get active occurrence of the nodes
     u_active = dc.G.nodes[u]["data"].active_occ[i]
     v_active = dc.G.nodes[v]["data"].active_occ[i]
-
+    #print("u_active:", u_active)
     new_u_occ = u_active.create_new_occ()
-
+    # print(u_active, v_active)
     # et tree containing v_active
     et_v = v_active.find_root()
-    # print("in_order after delete:", et_v.in_order())
-    # print("old_root,", et_v)
-    # print("new_root,", v_active)
+    # print(et_v)
+    # print("et_v:", et_v.in_order())
+
     #reroot et_v at v_active
     et_v = change_root(et_v, v_active, i, dc)
-
+    # print("et_v after root change:", et_v.find_root().in_order())
     # initialize first 2 of 4 tree occurrences corresponding to this edge
     dc.G.edges[edge]["data"].tree_occ[i][0] = u_active
     dc.G.edges[edge]["data"].tree_occ[i][1] = new_u_occ
@@ -267,6 +269,7 @@ def et_link(u, v, edge, i, dc):
     # to EulerTour, not the binary tree holding ET(v)) at v_active, we know that
     # v_active = et_v = et_v.first()
     et_v_last = et_v.last()
+
     dc.G.edges[edge]["data"].tree_occ[i][3] = et_v_last
     # if they are not the same occurrence of the same node
     if et_v_last is not v_active:
@@ -622,6 +625,7 @@ class DynamicCon:
 
         # now check if total added edges is larger than our rebuild bound
         if total_added_edges > self.rebuild_bound[i]:
+            print("edges were moved")
             self.move_edges(i)
             for j in range(i, self.max_level + 1):
                 self.added_edges[j] = 0
@@ -668,6 +672,8 @@ class DynamicCon:
                 # recurse on above level
                 if (i < self.max_level):
                     self.replace(u, v, i+1)
+                else:
+                    print("Could not replace")
             else:
                 # see if cut set is large enough
                 if len(cut_edges) >= (t1.sub_tree_weight/ self.small_set):
