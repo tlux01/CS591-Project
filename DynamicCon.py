@@ -719,7 +719,7 @@ class DynamicCon:
 
         #maybe add something to check if edge already exists, dont want to overwrite
 
-
+        # TODO: this does not work correctly. Either insert_tree or rebuild is broken
         self.G.add_edge(u,v)
         edge = (u,v)
         self.G.edges[edge]["data"] = DynamicConEdge()
