@@ -643,15 +643,15 @@ class DynamicCon:
             replacement_found = False
             sample_count = 0
             while not replacement_found and sample_count < self.sample_size:
-                edge = sample_and_test(t1,i)
+                edge = self.sample_and_test(t1, i)
                 # if sample_and_test returns an edge and not None
                 if edge:
                     replacement_found = True
 
             # sampling was successful
             if edge:
-                self.delete_non_tree(e)
-                self.insert_tree(e, i, True)
+                self.delete_non_tree(edge)
+                self.insert_tree(edge, i, True)
 
             else:
                 sample_success = False
@@ -682,7 +682,7 @@ class DynamicCon:
                     self.delete_non_tree(reconnect_edge)
                     if i < self.max_level:
                         # move edge to above level
-                        insert_tree(reconnect_edge, i+1,True)
+                        self.insert_tree(reconnect_edge, i + 1, True)
                         self.added_edges[i+1] += 1
                         # remove edge we just inserted into tree above
                         cut_edges = cut_edges[1:]
@@ -692,7 +692,7 @@ class DynamicCon:
                             self.added_edges[i+1] += 1
                         self.rebuild(i+1)
                     else:
-                        insert_tree(reconnect_edge,i, True)
+                        self.insert_tree(reconnect_edge, i, True)
     # function user can call to delete an edge in our graph G
     def del_edge(self, edge):
         if not self.tree_edge(edge):
@@ -743,7 +743,7 @@ class DynamicCon:
 
         # we have two possible cases that result from this search
         # either connected(u,v,lower) is true or either connected(u,v,lower+1)
-        if not connected(u,v,lower):
+        if not self.connected(u, v, lower):
             lower += 1
         self.insert_non_tree(edge, lower)
         self.added_edges[lower] += 1

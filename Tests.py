@@ -1,6 +1,6 @@
 from DynamicCon import DynamicCon
 import networkx as nx
-from random import sample
+from random import sample, seed
 
 
 def mySample(s):
@@ -31,6 +31,8 @@ def getRandomNotConnectedNodes(G):
 
 def test1(n,p):
     """tests DC and BFS-based connectivity alg on a G(n,p)"""
+    seed(69)
+
     G = nx.gnp_random_graph(n,p)
     print("G has {} connected components".format(nx.number_connected_components(G)))
     DC = DynamicCon(G)
@@ -50,6 +52,8 @@ def test1(n,p):
         node1,node2 = getRandomNotConnectedNodes(G)
         allFalses1[i] = areConnected(G,node1,node2)
         allFalses2[i] = DC.connected(node1,node2)
+        if not allFalses2[i]:
+            print("Node1: {}, node2: {}. CC of node1: {}".format(node1, node2, nx.node_connected_component(G,node1)))
 
     print("The BFS-based alg works correctly = " + str(True not in allFalses1))
     print("The DC-based alg works correctly = " + str(True not in allFalses2))
