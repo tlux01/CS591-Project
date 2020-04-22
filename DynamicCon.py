@@ -203,7 +203,6 @@ def et_cut(e, i, dc):
     s1, s2 = bbt.split(ea1, RIGHT, dc.et_dummy)
     s2, s3 = bbt.split(ea2, RIGHT, dc.et_dummy)
 
-    # WHAT DOES THIS DO? TODO: does this work?
     bbt.join(s1,s3,dc.et_dummy)
 
     s1,s2 = bbt.split(eb2, RIGHT, dc.et_dummy)
@@ -673,7 +672,7 @@ class DynamicCon:
                 if (i < self.max_level):
                     self.replace(u, v, i+1)
                 else:
-                    print("Could not replace")
+                    pass
             else:
                 # see if cut set is large enough
                 if len(cut_edges) >= (t1.sub_tree_weight/ self.small_set):
@@ -701,12 +700,17 @@ class DynamicCon:
                         self.insert_tree(reconnect_edge, i, True)
     # function user can call to delete an edge in our graph G
     def del_edge(self, edge):
+        # don't wanna try to delete a non-existing edge
+        if edge not in self.G.edges:
+            return
+        source = edge[0]
+        target = edge[1]
+
         if not self.tree_edge(edge):
             self.delete_non_tree(edge)
         else:
             i = self.level(edge)
-            source = edge[0]
-            target = edge[1]
+
 
             self.delete_tree(edge)
 
@@ -722,12 +726,12 @@ class DynamicCon:
 
     # function user can call to insert an edge from u to v in our graph G
     def ins(self, u, v):
-
-        #maybe add something to check if edge already exists, dont want to overwrite
-
-        # TODO: this does not work correctly. Either insert_tree or rebuild is broken
+        edge = (u, v)
+        # don't wanna insert an edge twice
+        if edge in self.G.edges:
+            return edge
         self.G.add_edge(u,v)
-        edge = (u,v)
+
         self.G.edges[edge]["data"] = DynamicConEdge()
 
         if not self.connected(u,v, self.max_level):
