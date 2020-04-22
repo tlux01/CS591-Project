@@ -123,8 +123,6 @@ def test4():
     DC = DynamicCon(G)
     DC_correct = [False]*num_tests
     for i in range(num_tests):
-        if i > 64:
-            print("Hi")
         r = random.random()
         if r < 0.5:
             # add random edge
