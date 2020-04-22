@@ -115,10 +115,10 @@ def test3():
     print("In-order of the tree containing {}: {}".format(v, g_nodes[v]["data"].active_occ[DC.max_level].find_root().in_order()))
 
 def test4():
-    seed(10)
-    n = 30
-    p = .09
-    num_tests = 3
+    seed(30)
+    n = 400
+    p = 2/n
+    num_tests = 1000
     G = nx.gnp_random_graph(n, p)
     DC = DynamicCon(G)
     DC_correct = [False]*num_tests
@@ -195,5 +195,5 @@ def test6():
     DC.ins(0,3)
 if __name__ == "__main__":
     n = 200
-    test6()
+    test4()
     print("Done")

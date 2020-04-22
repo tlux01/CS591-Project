@@ -28,6 +28,7 @@ class WBBTree(BBTree):
         self.set_weight(self.weight+a)
     # these functions fix the weights
     def after_rot(self):
+        #print('After Rot')
         self.parent.sub_tree_weight = self.sub_tree_weight
         self.sub_tree_weight = self.weight
         left = self.child[LEFT]
@@ -36,8 +37,10 @@ class WBBTree(BBTree):
             self.sub_tree_weight += left.sub_tree_weight
         if right:
             self.sub_tree_weight += right.sub_tree_weight
+        #bbt.print_tree(self.find_root())
     def init(self):
-        sub_tree_weight = self.weight
+        #print("Within Init:", self)
+        self.sub_tree_weight = self.weight
         left = self.child[LEFT]
         right = self.child[RIGHT]
         if left:

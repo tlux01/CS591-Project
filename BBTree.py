@@ -165,6 +165,7 @@ class BBTree:
 # rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
 def rotate(r_child, r_parent):
+    #print("rotate child:{} with parent{}:".format(r_child, r_parent))
     rotation_direction = RIGHT if r_parent.child[LEFT] is r_child else LEFT
 
     mid_tree = r_child.child[rotation_direction]
@@ -265,6 +266,7 @@ def smaller(u, v):
 
 # join two trees with the correct InOrder based on their priority
 def join(t1, t2, dummy):
+    #print("join")
     if not t1 or not t2:
         if t1:
             return t1
@@ -282,7 +284,7 @@ def join(t1, t2, dummy):
     t2.parent = dummy
     #fix info for derived classes
     dummy.init()
-
+    #print("Dummy after init:", dummy)
     # rotate dummy down until it is a leaf
     while dummy.child[LEFT] or dummy.child[RIGHT]:
         # to preserve in order we rotate with the node down
@@ -317,6 +319,7 @@ def join(t1, t2, dummy):
 
 #starting at our start_node, return two trees either split starting from the LEFT or RIGHT of this node
 def split(start_node, direction, dummy):
+    #print("splitting")
     if not start_node:
         t1 = None
         t2 = None
