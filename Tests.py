@@ -118,7 +118,7 @@ def test4():
     seed(400)
     n = 100
     p = 2/n
-    num_tests = 1000
+    num_tests = 10000
     G = nx.gnp_random_graph(n, p)
     DC = DynamicCon(G)
     DC_correct = [False]*num_tests
@@ -132,8 +132,6 @@ def test4():
             DC.ins(node1,node2)
         else:
             # remove random edge
-
-
             node1, node2 = mySample(G.edges)
             print("{} | Want to delete: {}".format(i,(node1,node2)))
             DC.del_edge((node1,node2))
