@@ -16,7 +16,7 @@ class AdjacencyTree(WBBTree):
         #                                             self.parent.edge if self.parent else "None",
         #                                             self.child[BBTree.LEFT].edge if self.child[BBTree.LEFT] else "None" ,
         #                                             self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
-        return "({})".format(self.edge)
+        return "{}".format(self.edge)
 
 
 ######################### Static Methods fo AdjacencyTree #############################

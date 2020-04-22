@@ -31,7 +31,7 @@ class EulerTourTree(WBBTree):
         self.edge_occurrences = [None, None]
 
     def __repr__(self):
-        output_string = "ETT(node:{}, eo:{})".format(self.node, self.edge_occurrences)
+        output_string = "|{}, w:{}, sw:{}, [{} {}]|".format(self.node, self.weight, self.sub_tree_weight, self.child[LEFT].node if self.child[LEFT] else None,self.child[RIGHT].node if self.child[RIGHT] else None)
         #output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
         return output_string
 
@@ -468,10 +468,14 @@ class DynamicCon:
         # and add edge to this list
 
         print("edge:{} inserted into tree at level:{}".format( edge, i))
+        #print("ETT:{}".format(self.G.nodes[u]["data"].active_occ[self.max_level].find_root().in_order()))
         self.tree_edges[i].append(edge)
 
         self.G.edges[edge]["data"].tree_level_edge =  edge
-
+        print("Source ETTree")
+        print(bbt.print_tree(self.G.nodes[edge[0]]["data"].active_occ[i].find_root()))
+        print("Target ETTree")
+        print(bbt.print_tree(self.G.nodes[edge[1]]["data"].active_occ[i].find_root()))
     def delete_tree(self, edge):
         i = self.level(edge)
         # in all levels higher (sparser cuts) remove from EulerTourTree F_j
@@ -479,16 +483,22 @@ class DynamicCon:
             et_cut(edge, j, self)
 
         #remove edge from out list
+        print("edge:{} deleted from tree at level:{}".format(edge, i))
         if edge in self.tree_edges[i]:
             self.tree_edges[i].remove(edge)
         else:
             self.tree_edges[i].remove((edge[1], edge[0]))
 
         self.G.edges[edge]["data"].tree_level_edge = None
+        print("Source ETTree")
+        print(bbt.print_tree(self.G.nodes[edge[0]]["data"].active_occ[i].find_root()))
+        print("Target ETTree")
+        print(bbt.print_tree(self.G.nodes[edge[1]]["data"].active_occ[i].find_root()))
 
     def insert_non_tree(self, edge, i):
 
         #set level of edge to i
+        print("edge:{} inserted into non tree at level:{}".format(edge, i))
         self.G.edges[edge]["data"].level = i
 
         source = edge[0]
@@ -498,17 +508,34 @@ class DynamicCon:
         if self.G.nodes[source]["data"].adjacent_edges[i] is None:
             self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_insert(self.G.nodes[source]["data"].adjacent_edges[i], edge, self.ed_dummy)
             self.G.edges[edge]["data"].non_tree_occ[0] = self.G.nodes[source]["data"].adjacent_edges[i]
+            self.G.nodes[source]["data"].adjacent_edges[i] = self.G.nodes[source]["data"].adjacent_edges[i].find_root()
         else:
-
             self.G.edges[edge]["data"].non_tree_occ[0] = adt.adj_insert(self.G.nodes[source]["data"].adjacent_edges[i], edge, self.ed_dummy)
+            self.G.nodes[source]["data"].adjacent_edges[i] = self.G.edges[edge]["data"].non_tree_occ[0].find_root()
+
         if self.G.nodes[target]["data"].adjacent_edges[i] is None:
             self.G.nodes[target]["data"].adjacent_edges[i] = adt.adj_insert(self.G.nodes[target]["data"].adjacent_edges[i], edge, self.ed_dummy)
             self.G.edges[edge]["data"].non_tree_occ[1] = self.G.nodes[target]["data"].adjacent_edges[i]
+            self.G.nodes[target]["data"].adjacent_edges[i] = self.G.nodes[target]["data"].adjacent_edges[i].find_root()
         else:
 
             self.G.edges[edge]["data"].non_tree_occ[1] = adt.adj_insert(self.G.nodes[target]["data"].adjacent_edges[i], edge, self.ed_dummy)
+            self.G.nodes[target]["data"].adjacent_edges[i] = self.G.edges[edge]["data"].non_tree_occ[1].find_root()
 
+        if self.G.nodes[source]["data"].adjacent_edges[i]:
 
+           if self.G.nodes[source]["data"].adjacent_edges[i] is not self.G.nodes[source]["data"].adjacent_edges[i].find_root():
+               print("We have root issue with adjacency tree at node:{}".format(source))
+               print("Adj:",self.G.nodes[source]["data"].adjacent_edges[i])
+               print("Non Tree:", self.G.edges[edge]["data"].non_tree_occ[0].find_root())
+           else:
+               print("Node:{}, Adj:{}".format(source, self.G.nodes[source]["data"].adjacent_edges[i].in_order()))
+
+        if self.G.nodes[target]["data"].adjacent_edges[i]:
+            if self.G.nodes[target]["data"].adjacent_edges[i] is not self.G.nodes[target]["data"].adjacent_edges[i].find_root():
+                print("We have root issue with adjacency tree at node:{}".format(target))
+            else:
+                print("Node:{}, Adj:{}".format(target, self.G.nodes[target]["data"].adjacent_edges[i].in_order()))
 
 
         # append edge DynCon's non-tree edges on level i
@@ -517,7 +544,11 @@ class DynamicCon:
 
         # increase weight of active occurences of source and target nodes at level i
         self.G.nodes[source]["data"].active_occ[i].add_weight(1)
+        print("Source ETTree")
+        print(bbt.print_tree(self.G.nodes[source]["data"].active_occ[i].find_root()))
         self.G.nodes[target]["data"].active_occ[i].add_weight(1)
+        print("Target ETTree")
+        print(bbt.print_tree(self.G.nodes[target]["data"].active_occ[i].find_root()))
 
     def delete_non_tree(self, edge):
 
@@ -526,13 +557,19 @@ class DynamicCon:
         target = edge[1]
 
         # remove edge from source and target adjacency trees
-        print(self.G.nodes[source]["data"].adjacent_edges[i])
+        print("edge:{} deleted at non tree at level:{}".format(edge, i))
         self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_delete(self.G.nodes[source]["data"].adjacent_edges[i],
                                                                         self.G.edges[edge]["data"].non_tree_occ[0],
                                                                         self.ed_dummy)
 
+        if self.G.nodes[source]["data"].adjacent_edges[i]:
 
-
+            if self.G.nodes[source]["data"].adjacent_edges[i] is not self.G.nodes[source]["data"].adjacent_edges[i].find_root():
+                print("We have root issue with adjacency tree at node:{}".format(source))
+            else:
+                print("Node:{}, Adj:{}".format(source, self.G.nodes[source]["data"].adjacent_edges[i].in_order()))
+        else:
+            print("Node:{}, Adj:{}".format(source, None))
         self.G.edges[edge]["data"].non_tree_occ[0] = None
 
 
@@ -540,6 +577,13 @@ class DynamicCon:
                                                                         self.G.edges[edge]["data"].non_tree_occ[1],
                                                                         self.ed_dummy)
 
+        if self.G.nodes[target]["data"].adjacent_edges[i]:
+            if self.G.nodes[target]["data"].adjacent_edges[i] is not self.G.nodes[target]["data"].adjacent_edges[i].find_root():
+                print("We have root issue with adjacency tree at node:{}".format(target))
+            else:
+                print("Node:{}, Adj:{}".format(target, self.G.nodes[target]["data"].adjacent_edges[i].in_order()))
+        else:
+            print("Node:{}, Adj:{}".format(target, None))
         self.G.edges[edge]["data"].non_tree_occ[1] = None
 
         if edge in self.non_tree_edges[i]:
@@ -551,8 +595,13 @@ class DynamicCon:
 
         if self.G.nodes[source]["data"].active_occ[i]:
             self.G.nodes[source]["data"].active_occ[i].add_weight(-1)
+            print("Source ETTree")
+            print(bbt.print_tree(self.G.nodes[source]["data"].active_occ[i].find_root()))
         if self.G.nodes[target]["data"].active_occ[i]:
             self.G.nodes[target]["data"].active_occ[i].add_weight(-1)
+            print("Target ETTree")
+            print(bbt.print_tree(self.G.nodes[target]["data"].active_occ[i].find_root()))
+
 
     def sample_and_test(self, et_tree, i):
         ''' Randomly select a non_tree edge of G_i (level i) with at least one endpoint
@@ -563,16 +612,18 @@ class DynamicCon:
         # weight represents number of adjacent non tree edges
         # where we double count those with two endpoint in et_tree
         tree_weight = et_tree.sub_tree_weight
-
+        print(tree_weight)
         rand_et_num = random.randint(1, tree_weight)
-
+        print("ET Locate", rand_et_num)
         # EulerTourTree node corresponding to our random number
         et_node, offset = wbbt.locate(et_tree, rand_et_num)
-
+        #print("Offset:", offset)
         # get node
         u = et_node.node
 
         # get the AdjacencyTree node corresponding to returned offset
+        #print(self.G.nodes[u]["data"].adjacent_edges[i].find_root().in_order())
+        print("Adj Locate")
         adj_node, _ = wbbt.locate(self.G.nodes[u]["data"].adjacent_edges[i], offset)
         edge = adj_node.edge
 
@@ -608,6 +659,8 @@ class DynamicCon:
             u = et_node.node
             # only look at active so we dont double count
             if et_node.active:
+                print("Node:{}, Adj:{}".format(et_node.node, self.G.nodes[u]["data"].adjacent_edges[level].in_order())
+                if self.G.nodes[u]["data"].adjacent_edges[level] else "Node:{}, Adj:{}".format(et_node.node, None))
                 self.traverse_edges(self.G.nodes[u]["data"].adjacent_edges[level], edge_list)
             # traverse through all nodes in EulerTourTree
             self.get_cut_edges(et_node.child[LEFT], level, edge_list)
@@ -695,6 +748,7 @@ class DynamicCon:
             cut_edges = []
             if t1.sub_tree_weight > 0:
                 self.get_cut_edges(t1, i, cut_edges)
+
             if len(cut_edges) == 0:
                 # recurse on above level
                 if (i < self.max_level):
@@ -706,8 +760,9 @@ class DynamicCon:
                 if len(cut_edges) >= (t1.sub_tree_weight/ self.small_set):
                     #doesn't matter which edge we take, so for simplicity take first
                     reconnect_edge = cut_edges[0]
+                    print("reconnect_edge:", reconnect_edge)
                     self.delete_non_tree(reconnect_edge)
-                    # print("reconnect_edge:", reconnect_edge)
+
                     self.insert_tree(reconnect_edge, i, True)
                 # too few edges crossing our cut
                 else:
@@ -735,7 +790,7 @@ class DynamicCon:
         target = edge[1]
 
         if not self.tree_edge(edge):
-            print("non-tree")
+
             self.delete_non_tree(edge)
         else:
             i = self.level(edge)

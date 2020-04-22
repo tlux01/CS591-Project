@@ -32,7 +32,7 @@ def getRandomNotConnectedNodes(G):
 
 def test1(n,p):
     """tests DC and BFS-based connectivity alg on a G(n,p)"""
-    seed(69)
+    #seed(69)
 
     G = nx.gnp_random_graph(n,p)
     print("G has {} connected components".format(nx.number_connected_components(G)))
@@ -115,9 +115,41 @@ def test3():
     print("In-order of the tree containing {}: {}".format(v, g_nodes[v]["data"].active_occ[DC.max_level].find_root().in_order()))
 
 def test4():
-    seed(100)
-    n = 40
-    p = 2/n
+    seed(10)
+    n = 30
+    p = .09
+    num_tests = 3
+    G = nx.gnp_random_graph(n, p)
+    DC = DynamicCon(G)
+    DC_correct = [False]*num_tests
+    for i in range(num_tests):
+        r = random.random()
+        if r < 0.5:
+            # add random edge
+            node1 = mySample(G.nodes)
+            node2 = mySample(G.nodes - {node1})
+            print("{} | Want to insert: {}".format(i,(node1,node2)))
+            DC.ins(node1,node2)
+        else:
+            # remove random edge
+
+
+            node1, node2 = mySample(G.edges)
+            print("{} | Want to delete: {}".format(i,(node1,node2)))
+            DC.del_edge((node1,node2))
+        node1,node2 = getRandomConnectedNodes(G)
+        node3, node4 = getRandomNotConnectedNodes(G)
+
+        DC_correct[i] = DC.connected(node1,node2) and not DC.connected(node3,node4)
+        if not DC_correct[i]:
+            print("{} and {} connected: {}".format(node1, node2, DC.connected(node1,node2)))
+            print("{} and {} not connected: {}".format(node3, node4, DC.connected(node3,node4)))
+    print("DC works correctly = {}".format(False not in DC_correct))
+
+def test5():
+    seed(10)
+    n = 10
+    p = .06
     num_tests = 100
     G = nx.gnp_random_graph(n, p)
     DC = DynamicCon(G)
@@ -128,22 +160,40 @@ def test4():
             # add random edge
             node1 = mySample(G.nodes)
             node2 = mySample(G.nodes - {node1})
+            print("{} | Want to insert: {}".format(i,(node1,node2)))
             DC.ins(node1,node2)
         else:
             # remove random edge
 
 
             node1, node2 = mySample(G.edges)
-            print("Want to delete: {}".format((node1,node2)))
+            print("{} | Want to delete: {}".format(i,(node1,node2)))
             DC.del_edge((node1,node2))
         node1,node2 = getRandomConnectedNodes(G)
         node3, node4 = getRandomNotConnectedNodes(G)
+
         DC_correct[i] = DC.connected(node1,node2) and not DC.connected(node3,node4)
         if not DC_correct[i]:
             print("{} and {} connected: {}".format(node1, node2, DC.connected(node1,node2)))
             print("{} and {} not connected: {}".format(node3, node4, DC.connected(node3,node4)))
     print("DC works correctly = {}".format(False not in DC_correct))
+
+def test6():
+    G = nx.Graph()
+    for i in range(4):
+        G.add_node(i)
+    G.add_edge(0,1)
+    G.add_edge(1,2)
+
+
+
+
+    DC = DynamicCon(G)
+
+    DC.ins(0,2)
+
+    DC.ins(0,3)
 if __name__ == "__main__":
     n = 200
-    test4()
+    test6()
     print("Done")
