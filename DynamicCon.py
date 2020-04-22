@@ -394,7 +394,7 @@ class DynamicCon:
         self.sample_size = 32 * logn * logn
         # this is l in the paper
         self.max_level = 6 * logn
-        self.max_level = 0
+        #self.max_level = 0
         # counters for number of edges added to each level
         self.added_edges = [0 for _ in range(self.max_level + 1)]
         # rebuild bound of last level, double it as we go up levels
