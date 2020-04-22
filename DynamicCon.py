@@ -466,7 +466,10 @@ class DynamicCon:
             et_link(u,v, edge, j, self)
         # edge now has pointer to DynamicCon's tree edges at level i,
         # and add edge to this list
+
+        print("edge:{} inserted into tree at level:{}".format( edge, i))
         self.tree_edges[i].append(edge)
+
         self.G.edges[edge]["data"].tree_level_edge =  edge
 
     def delete_tree(self, edge):
@@ -476,7 +479,10 @@ class DynamicCon:
             et_cut(edge, j, self)
 
         #remove edge from out list
-        self.tree_edges[i].remove(edge)
+        if edge in self.tree_edges[i]:
+            self.tree_edges[i].remove(edge)
+        else:
+            self.tree_edges[i].remove((edge[1], edge[0]))
 
         self.G.edges[edge]["data"].tree_level_edge = None
 
@@ -491,12 +497,19 @@ class DynamicCon:
         #need to initialize if none
         if self.G.nodes[source]["data"].adjacent_edges[i] is None:
             self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_insert(self.G.nodes[source]["data"].adjacent_edges[i], edge, self.ed_dummy)
+            self.G.edges[edge]["data"].non_tree_occ[0] = self.G.nodes[source]["data"].adjacent_edges[i]
+        else:
+
+            self.G.edges[edge]["data"].non_tree_occ[0] = adt.adj_insert(self.G.nodes[source]["data"].adjacent_edges[i], edge, self.ed_dummy)
         if self.G.nodes[target]["data"].adjacent_edges[i] is None:
             self.G.nodes[target]["data"].adjacent_edges[i] = adt.adj_insert(self.G.nodes[target]["data"].adjacent_edges[i], edge, self.ed_dummy)
+            self.G.edges[edge]["data"].non_tree_occ[1] = self.G.nodes[target]["data"].adjacent_edges[i]
+        else:
 
-        #insert edge into adjacency tree of edge,
-        self.G.edges[edge]["data"].non_tree_occ[0] = adt.adj_insert(self.G.nodes[source]["data"].adjacent_edges[i], edge, self.ed_dummy)
-        self.G.edges[edge]["data"].non_tree_occ[1] = adt.adj_insert(self.G.nodes[target]["data"].adjacent_edges[i], edge, self.ed_dummy)
+            self.G.edges[edge]["data"].non_tree_occ[1] = adt.adj_insert(self.G.nodes[target]["data"].adjacent_edges[i], edge, self.ed_dummy)
+
+
+
 
         # append edge DynCon's non-tree edges on level i
         self.non_tree_edges[i].append(edge)
@@ -513,16 +526,27 @@ class DynamicCon:
         target = edge[1]
 
         # remove edge from source and target adjacency trees
+        print(self.G.nodes[source]["data"].adjacent_edges[i])
         self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_delete(self.G.nodes[source]["data"].adjacent_edges[i],
                                                                         self.G.edges[edge]["data"].non_tree_occ[0],
                                                                         self.ed_dummy)
+
+
+
         self.G.edges[edge]["data"].non_tree_occ[0] = None
+
+
         self.G.nodes[target]["data"].adjacent_edges[i] = adt.adj_delete(self.G.nodes[target]["data"].adjacent_edges[i],
                                                                         self.G.edges[edge]["data"].non_tree_occ[1],
                                                                         self.ed_dummy)
+
         self.G.edges[edge]["data"].non_tree_occ[1] = None
 
-        self.non_tree_edges[i].remove(edge)
+        if edge in self.non_tree_edges[i]:
+            self.non_tree_edges[i].remove(edge)
+        else:
+            self.non_tree_edges[i].remove((edge[1], edge[0]))
+
         self.G.edges[edge]["data"].non_tree_level_edge = None
 
         if self.G.nodes[source]["data"].active_occ[i]:
@@ -549,7 +573,7 @@ class DynamicCon:
         u = et_node.node
 
         # get the AdjacencyTree node corresponding to returned offset
-        adj_node, _ = wbbt.locate(self.G.nodes[u]["data"], offset)
+        adj_node, _ = wbbt.locate(self.G.nodes[u]["data"].adjacent_edges[i], offset)
         edge = adj_node.edge
 
         v = edge[1] if (u == edge[0]) else edge[0]
@@ -579,6 +603,7 @@ class DynamicCon:
     # return edges with exactly one endpoint in et_tree rooted at et_node
     # edge list is mutable list so no need to return updates will propegate
     def get_cut_edges(self, et_node, level, edge_list):
+
         if et_node and et_node.sub_tree_weight > 0:
             u = et_node.node
             # only look at active so we dont double count
@@ -603,7 +628,10 @@ class DynamicCon:
             while len(self.tree_edges[j]) > 0:
 
                 edge = self.tree_edges[j][0]
-                self.tree_edges[j].remove(edge)
+                if edge in self.tree_edges[j]:
+                    self.tree_edges[j].remove(edge)
+                else:
+                    self.tree_edges[j].remove((edge[1], edge[0]))
                 self.tree_edges[i-1].append(edge)
                 self.G.edges[edge]["data"].tree_level_edge = edge
                 self.G.edges[edge]["data"].level = i - 1
@@ -707,6 +735,7 @@ class DynamicCon:
         target = edge[1]
 
         if not self.tree_edge(edge):
+            print("non-tree")
             self.delete_non_tree(edge)
         else:
             i = self.level(edge)

@@ -12,11 +12,11 @@ class AdjacencyTree(WBBTree):
         self.edge = e
 
     def __repr__(self):
-        return "{} , parent: {}, children: [{},{}] |".format(self.edge,
-                                                    self.parent.edge if self.parent else "None",
-                                                    self.child[BBTree.LEFT].edge if self.child[BBTree.LEFT] else "None" ,
-                                                    self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
-        #return "({}, {})".format(self.weight, self.edge)
+        # return "{} , parent: {}, children: [{},{}] |".format(self.edge,
+        #                                             self.parent.edge if self.parent else "None",
+        #                                             self.child[BBTree.LEFT].edge if self.child[BBTree.LEFT] else "None" ,
+        #                                             self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
+        return "({})".format(self.edge)
 
 
 ######################### Static Methods fo AdjacencyTree #############################
@@ -24,8 +24,8 @@ def adj_insert(adt, e, dummy):
     '''return self with inserted edge (a,b)'''
     aux = AdjacencyTree(e)
     # if adt is None, join handles this by returning aux
-
-    return BBTree.join(adt,aux,dummy)
+    BBTree.join(adt,aux,dummy)
+    return aux
 
 def adj_delete(adj_t, node, dummy):
     '''deletes node from adj_t'''

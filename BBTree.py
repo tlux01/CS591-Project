@@ -320,7 +320,7 @@ def split(start_node, direction, dummy):
     if not start_node:
         t1 = None
         t2 = None
-        return
+        return t1, t2
 
     dummy.child[LEFT] = None
     dummy.child[RIGHT] = None

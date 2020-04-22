@@ -115,6 +115,7 @@ def test3():
     print("In-order of the tree containing {}: {}".format(v, g_nodes[v]["data"].active_occ[DC.max_level].find_root().in_order()))
 
 def test4():
+    seed(100)
     n = 40
     p = 2/n
     num_tests = 100
@@ -130,11 +131,17 @@ def test4():
             DC.ins(node1,node2)
         else:
             # remove random edge
+
+
             node1, node2 = mySample(G.edges)
+            print("Want to delete: {}".format((node1,node2)))
             DC.del_edge((node1,node2))
         node1,node2 = getRandomConnectedNodes(G)
         node3, node4 = getRandomNotConnectedNodes(G)
         DC_correct[i] = DC.connected(node1,node2) and not DC.connected(node3,node4)
+        if not DC_correct[i]:
+            print("{} and {} connected: {}".format(node1, node2, DC.connected(node1,node2)))
+            print("{} and {} not connected: {}".format(node3, node4, DC.connected(node3,node4)))
     print("DC works correctly = {}".format(False not in DC_correct))
 if __name__ == "__main__":
     n = 200
