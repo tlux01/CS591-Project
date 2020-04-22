@@ -115,14 +115,16 @@ def test3():
     print("In-order of the tree containing {}: {}".format(v, g_nodes[v]["data"].active_occ[DC.max_level].find_root().in_order()))
 
 def test4():
-    seed(30)
-    n = 400
+    seed(400)
+    n = 100
     p = 2/n
     num_tests = 1000
     G = nx.gnp_random_graph(n, p)
     DC = DynamicCon(G)
     DC_correct = [False]*num_tests
     for i in range(num_tests):
+        if i > 64:
+            print("Hi")
         r = random.random()
         if r < 0.5:
             # add random edge
