@@ -472,7 +472,7 @@ class DynamicCon:
         else:
             source = edge[1]
             target = edge[0]
-        print("edge:{} inserted into tree at level:{}".format(edge, i))
+        # print("edge:{} inserted into tree at level:{}".format(edge, i))
         # DynamicConEdge
         self.G.edges[edge]["data"].level = i
 
@@ -500,7 +500,7 @@ class DynamicCon:
         # print(bbt.print_tree(self.G.nodes[edge[1]]["data"].active_occ[i].find_root()))
     def delete_tree(self, edge):
         i = self.level(edge)
-        print("edge:{} deleted from tree at level:{}".format(edge, i))
+        # print("edge:{} deleted from tree at level:{}".format(edge, i))
         # in all levels higher (sparser cuts) remove from EulerTourTree F_j
         for j in range(i, self.max_level + 1):
             et_cut(edge, j, self)
@@ -521,7 +521,7 @@ class DynamicCon:
     def insert_non_tree(self, edge, i):
 
         #set level of edge to i
-        print("edge:{} inserted into non tree at level:{}".format(edge, i))
+        # print("edge:{} inserted into non tree at level:{}".format(edge, i))
         self.G.edges[edge]["data"].level = i
 
         # source is smaller node
@@ -573,7 +573,7 @@ class DynamicCon:
             target = edge[0]
 
         # remove edge from source and target adjacency trees
-        print("edge:{} deleted at non tree at level:{}".format(edge, i))
+        # print("edge:{} deleted at non tree at level:{}".format(edge, i))
         self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_delete(self.G.nodes[source]["data"].adjacent_edges[i],
                                                                         self.G.edges[edge]["data"].non_tree_occ[0],
                                                                         self.ed_dummy)
@@ -643,9 +643,9 @@ class DynamicCon:
             try:
                 i = self.level(edge)
             except:
-                print("Error in AdjacencyTree, edge referenced that shouldn't exist")
-                print("edge:", edge)
-                print("AdjacencyTree:", adj_node.find_root().in_order())
+                # print("Error in AdjacencyTree, edge referenced that shouldn't exist")
+                # print("edge:", edge)
+                # print("AdjacencyTree:", adj_node.find_root().in_order())
                 raise Exception("Hi")
                 # source is smaller node
             if edge[0] < edge[1]:
@@ -669,7 +669,7 @@ class DynamicCon:
             u = et_node.node
             # only look at active so we dont double count
             if et_node.active:
-                print("Cut Edge node:{}", u)
+                # print("Cut Edge node:{}", u)
                 # print("Node:{}, Adj:{}".format(et_node.node, self.G.nodes[u]["data"].adjacent_edges[level].in_order())
                 # if self.G.nodes[u]["data"].adjacent_edges[level] else "Node:{}, Adj:{}".format(et_node.node, None))
                 self.traverse_edges(self.G.nodes[u]["data"].adjacent_edges[level], edge_list)
@@ -721,7 +721,7 @@ class DynamicCon:
 
         # now check if total added edges is larger than our rebuild bound
         if total_added_edges > self.rebuild_bound[i]:
-            print("edges were moved")
+            # print("edges were moved")
             self.move_edges(i)
             for j in range(i, self.max_level + 1):
                 self.added_edges[j] = 0
@@ -776,7 +776,7 @@ class DynamicCon:
                 if len(cut_edges) >= (t1.sub_tree_weight/ self.small_set):
                     #doesn't matter which edge we take, so for simplicity take first
                     reconnect_edge = cut_edges[0]
-                    print("reconnect_edge:", reconnect_edge)
+                    # print("reconnect_edge:", reconnect_edge)
                     self.delete_non_tree(reconnect_edge)
 
                     self.insert_tree(reconnect_edge, i, True)

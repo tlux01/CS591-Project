@@ -67,14 +67,14 @@ class WBBTree(BBTree):
 
 # return the node of tree t that corresponds to w wrt In-order
 def locate(t, w):
-    print(bbt.print_tree(t))
+    #print(bbt.print_tree(t))
     curr_node = t
     left = curr_node.child[LEFT]
     lower = left.sub_tree_weight if curr_node.child[LEFT] else 0
     upper = lower + curr_node.weight
 
     while (w <= lower or w > upper):
-        print("current node: {}. lower: {}. upper: {}".format(curr_node, lower, upper))
+        #print("current node: {}. lower: {}. upper: {}".format(curr_node, lower, upper))
         if (w <= lower):
             # proceed to the left child
             curr_node = curr_node.child[LEFT]

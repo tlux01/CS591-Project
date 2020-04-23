@@ -2,6 +2,8 @@ from DynamicCon import DynamicCon
 import networkx as nx
 from random import sample, seed
 import random
+from time import time
+import copy
 
 
 def mySample(s):
@@ -191,7 +193,67 @@ def test6():
     DC.ins(0,2)
 
     DC.ins(0,3)
+
+def benchmark1():
+    n = 10000
+    p = 2 / n
+    num_iterations = 100
+    query_frequency = 10
+    print("Running benchmark")
+    print("number of nodes: {}\n"
+          "number of edge additions and deletions: {}\n"
+          "query frequency: {}\n".format(n, num_iterations, query_frequency))
+    total_time_DC = 0
+    total_time_BFS = 0
+    G = nx.gnp_random_graph(n, p)
+    H = copy.deepcopy(G) # keep H to be the same as G
+    precompute_start = time()
+    DC = DynamicCon(G)
+    precompute_end = time()
+    precompute_time = precompute_end - precompute_start
+    for i in range(num_iterations):
+
+        node1, node2 = sample(G.nodes,2)
+        node3, node4 = mySample(G.edges)
+        node5, node6 = sample(G.nodes, 2)
+        # only query once in query_frequency
+        if (i % query_frequency == 0):
+            start = time()
+            DC.ins(node1, node2)
+            DC.del_edge((node3, node4))
+            c1 = DC.connected(node5, node6)
+            end = time()
+            total_time_DC += end - start
+
+            start = time()
+            H.add_edge(node1, node2)
+            H.remove_edge(node3, node4)
+            c2 = areConnected(H, node5, node6)
+            end = time()
+            total_time_BFS += end - start
+        else:
+            start = time()
+            DC.ins(node1, node2)
+            DC.del_edge((node3, node4))
+            end = time()
+            total_time_DC += end - start
+
+            start = time()
+            H.add_edge(node1, node2)
+            H.remove_edge(node3, node4)
+            end = time()
+            total_time_BFS += end - start
+
+        if (c1 != c2):
+            print("ERROR! THE TWO METHODS DO NOT AGREE!")
+    return precompute_time, total_time_DC, total_time_BFS
+
 if __name__ == "__main__":
-    n = 200
-    test4()
+    start = time()
+    precompute, tDC, tBFS = benchmark1()
+    end = time()
+    print("The benchmark took {} seconds.".format(end - start))
+    print("Time to build the dynamic data structure: {} seconds\n"
+          "total time DC took: {} seconds\n"
+          "total time BFS took: {} seconds".format(precompute, tDC, tBFS))
     print("Done")
