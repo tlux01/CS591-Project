@@ -117,7 +117,7 @@ def change_root(old_root, new_root, i, dc):
 
     # edge is represented by tuple
     first_edge = first_node.edge_occurrences[RIGHT]
-    # print('first_edge:', first_edge)
+
     if first_edge != last_node.edge_occurrences[LEFT] or new_root is last_node:
         k = 0
         # find pointer to first node
@@ -249,13 +249,12 @@ def et_link(u, v, edge, i, dc):
     # get active occurrence of the nodes
     u_active = dc.G.nodes[u]["data"].active_occ[i]
     v_active = dc.G.nodes[v]["data"].active_occ[i]
-    #print("u_active:", u_active)
+
     new_u_occ = u_active.create_new_occ()
-    # print(u_active, v_active)
+
     # et tree containing v_active
     et_v = v_active.find_root()
-    # print(et_v)
-    # print("et_v:", et_v.in_order())
+
 
     #reroot et_v at v_active
     et_v = change_root(et_v, v_active, i, dc)
@@ -307,27 +306,14 @@ def et_link(u, v, edge, i, dc):
 
     et_v_last.edge_occurrences[RIGHT] = edge
 
-    # print("Before")
-    # bbt.print_tree(et_v)
     et_v = bbt.join(et_v, new_u_occ, dc.et_dummy)
-    # print("ET_v")
-    # bbt.print_tree(et_v)
+
     s1, s2 = bbt.split(u_active, RIGHT, dc.et_dummy)
-    # print("s1")
-    #bbt.print_tree(s1)
-    # print("dummy")
-    # print(dc.et_dummy)
-    # print("s2")
-    # bbt.print_tree(s2)
-    # print("dummy")
-    # print(dc.et_dummy)
+
     s3 = bbt.join(et_v, s2, dc.et_dummy)
-    # print("s3")
-    #bbt.print_tree(s3)
+
     et = bbt.join(s1, s3, dc.et_dummy)
 
-    # if edge == (0,3) and i ==0:
-    #     print("Update to edge (0,3):", dc.G.edges[edge]["data"].tree_occ[i])
     return et
 
 
@@ -354,14 +340,6 @@ class DynamicConNode():
 class DynamicConEdge:
     def __init__(self):
         self.level = None
-
-        # the edge that is within none_tree_edges[level]
-        # None if tree edge
-        self.non_tree_level_edge = None
-
-        # the edge that is within tree_edges[level]
-        # None if non tree edge
-        self.tree_level_edge = None
 
         # points to the two ed_nodes corresponding to this edge, are
         # none if this is a tree edge, 0th index is source of edge, 1st
@@ -472,7 +450,7 @@ class DynamicCon:
         else:
             source = edge[1]
             target = edge[0]
-        # print("edge:{} inserted into tree at level:{}".format(edge, i))
+
         # DynamicConEdge
         self.G.edges[edge]["data"].level = i
 
@@ -484,20 +462,12 @@ class DynamicCon:
 
 
         for j in range(i, self.max_level + 1):
-            #print("ET Link", u,v)
             et_link(source,target, edge, j, self)
         # edge now has pointer to DynamicCon's tree edges at level i,
         # and add edge to this list
 
-
-        #print("ETT:{}".format(self.G.nodes[u]["data"].active_occ[self.max_level].find_root().in_order()))
         self.tree_edges[i].append(edge)
 
-        self.G.edges[edge]["data"].tree_level_edge =  edge
-        # print("Source ETTree")
-        # print(bbt.print_tree(self.G.nodes[edge[0]]["data"].active_occ[i].find_root()))
-        # print("Target ETTree")
-        # print(bbt.print_tree(self.G.nodes[edge[1]]["data"].active_occ[i].find_root()))
     def delete_tree(self, edge):
         i = self.level(edge)
         # print("edge:{} deleted from tree at level:{}".format(edge, i))
@@ -512,11 +482,6 @@ class DynamicCon:
         else:
             self.tree_edges[i].remove((edge[1], edge[0]))
 
-        self.G.edges[edge]["data"].tree_level_edge = None
-        # print("Source ETTree")
-        # print(bbt.print_tree(self.G.nodes[edge[0]]["data"].active_occ[i].find_root()))
-        # print("Target ETTree")
-        # print(bbt.print_tree(self.G.nodes[edge[1]]["data"].active_occ[i].find_root()))
 
     def insert_non_tree(self, edge, i):
 
@@ -553,7 +518,6 @@ class DynamicCon:
 
         # append edge DynCon's non-tree edges on level i
         self.non_tree_edges[i].append(edge)
-        self.G.edges[edge]["data"].non_tree_level_edge = edge
 
         # increase weight of active occurences of source and target nodes at level i
         self.G.nodes[source]["data"].active_occ[i].add_weight(1)
@@ -593,7 +557,6 @@ class DynamicCon:
         else:
             self.non_tree_edges[i].remove((edge[1], edge[0]))
 
-        self.G.edges[edge]["data"].non_tree_level_edge = None
 
         if self.G.nodes[source]["data"].active_occ[i]:
             self.G.nodes[source]["data"].active_occ[i].add_weight(-1)
@@ -697,7 +660,7 @@ class DynamicCon:
                 else:
                     self.tree_edges[j].remove((edge[1], edge[0]))
                 self.tree_edges[i-1].append(edge)
-                self.G.edges[edge]["data"].tree_level_edge = edge
+
                 self.G.edges[edge]["data"].level = i - 1
 
                 # source is smaller node
