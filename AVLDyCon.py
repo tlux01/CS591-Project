@@ -1,16 +1,16 @@
 import networkx as nx
 import random
 
-import WRBBTree as wrbbt
-import AdjacencyRBBTree as adt
-import RBBTree as rbbt
 
+import AVLTree as avl
+import WAVLTree as wavl
+import AdjacencyAVLTree as adt
 # don't touch
 LEFT = 0
 RIGHT = 1
 
 
-class EulerTourTree(wrbbt.WRBBTree):
+class EulerTourTree(wavl.WAVLTree):
 
     def __init__(self, dc, node, level=-1, active=False):
         # we an EulerTree Node initialize it with zero weight
@@ -28,9 +28,9 @@ class EulerTourTree(wrbbt.WRBBTree):
         self.edge_occurrences = [None, None]
 
     def __repr__(self):
-        output_string = "|{}, w:{}, sw:{}, [{} {}]|".format(self.node, self.weight, self.sub_tree_weight,
-                                                            self.child[LEFT].node if self.child[LEFT] else None,
-                                                            self.child[RIGHT].node if self.child[RIGHT] else None)
+        #output_string = "|{}, w:{}, sw:{}, [{} {}]|".format(self.node, self.weight, self.sub_tree_weight, self.child[LEFT].node if self.child[LEFT] else None,self.child[RIGHT].node if self.child[RIGHT] else None)
+        #output_string = "ETT(dc:{},level:{},node:{})".format(self.dc.max_level, self.level, self.node)
+        output_string = "|{}, w:{}, s:{}|".format(self.node, self.weight, self.sub_tree_weight)
         return output_string
 
     # acts as a second constructor, creates a new EulerTourTree occurrence from
@@ -49,8 +49,6 @@ class EulerTourTree(wrbbt.WRBBTree):
         to.set_weight(self.weight)
         self.weight = 0
         self.dc.G.nodes[self.node]["data"].active_occ[self.level] = to
-
-
 
 
 ################# Static Methods for EulerTourTree ######################
@@ -104,10 +102,8 @@ def change_root(old_root, new_root, i, dc):
     if first_edge != last_node.edge_occurrences[LEFT] or new_root is last_node:
         k = 0
         # find pointer to first node
-        # print("First Node:", first_node)
+
         while True:
-            # print(k)
-            # print(dc.G.edges[first_edge]["data"].tree_occ[i][k])
             if dc.G.edges[first_edge]["data"].tree_occ[i][k] is not first_node:
                 k += 1
             else:
@@ -132,15 +128,15 @@ def change_root(old_root, new_root, i, dc):
     new_root.edge_occurrences[LEFT] = None
 
     # get rid of first_node
-    s1, s2 = rbbt.split(first_node, RIGHT, dc.et_dummy)
-    # isolate node
+    s1, s2 = avl.split(first_node, RIGHT, dc.et_dummy)
+    # when u see a deletion of a node, isolate
     first_node.isolate()
 
-    s1, s2 = rbbt.split(new_root, LEFT, dc.et_dummy)
+    s1, s2 = avl.split(new_root, LEFT, dc.et_dummy)
 
-    s3 = rbbt.join(s1, new_occ, dc.et_dummy)
+    s3 = avl.join(s1, new_occ, dc.et_dummy)
 
-    et = rbbt.join(s2, s3, dc.et_dummy)
+    et = avl.join(s2, s3, dc.et_dummy)
 
     return et
 
@@ -164,31 +160,31 @@ def et_cut(e, i, dc):
     # sort e1,e2,e3,e4 s.t. ea1 < eb1 < eb2 < ea2 in In-order
     # e1 may be None
     if ea1 and ea2:
-        if rbbt.smaller(ea2,ea1):
+        if avl.smaller(ea2,ea1):
             ea1, ea2 = swap(ea1, ea2)
     else: # either e1 or e2 is None
         if ea1:
             ea2 = ea1
             ea1 = None
     if eb1 and eb2:
-        if rbbt.smaller(eb2,eb1):
+        if avl.smaller(eb2,eb1):
             eb1, eb2 = swap(eb1, eb2)
     else: # either eb1 or eb2 is None
         if eb1:
             eb2 = eb1
             eb1 = None
     # now ea2 and eb2 are not None
-    if rbbt.smaller(ea2, eb2):
+    if avl.smaller(ea2, eb2):
         ea1, eb1 = swap(ea1, eb1)
         ea2, eb2 = swap(ea2, eb2)
 
     # update ET trees
-    s1, s2 = rbbt.split(ea1, RIGHT, dc.et_dummy)
-    s2, s3 = rbbt.split(ea2, RIGHT, dc.et_dummy)
+    s1, s2 =avl.split(ea1, RIGHT, dc.et_dummy)
+    s2, s3 =avl.split(ea2, RIGHT, dc.et_dummy)
 
-    rbbt.join(s1,s3,dc.et_dummy)
+    avl.join(s1,s3,dc.et_dummy)
 
-    s1,s2 = rbbt.split(eb2, RIGHT, dc.et_dummy)
+    s1,s2 = avl.split(eb2, RIGHT, dc.et_dummy)
 
     # update active occurrences
     if ea2.active:
@@ -241,7 +237,7 @@ def et_link(u, v, edge, i, dc):
 
     #reroot et_v at v_active
     et_v = change_root(et_v, v_active, i, dc)
-    # print("et_v after root change:", et_v.find_root().in_order())
+
     # initialize first 2 of 4 tree occurrences corresponding to this edge
     dc.G.edges[edge]["data"].tree_occ[i][0] = u_active
     dc.G.edges[edge]["data"].tree_occ[i][1] = new_u_occ
@@ -289,13 +285,13 @@ def et_link(u, v, edge, i, dc):
 
     et_v_last.edge_occurrences[RIGHT] = edge
 
-    et_v = rbbt.join(et_v, new_u_occ, dc.et_dummy)
+    et_v = avl.join(et_v, new_u_occ, dc.et_dummy)
 
-    s1, s2 = rbbt.split(u_active, RIGHT, dc.et_dummy)
+    s1, s2 = avl.split(u_active, RIGHT, dc.et_dummy)
 
-    s3 = rbbt.join(et_v, s2, dc.et_dummy)
+    s3 = avl.join(et_v, s2, dc.et_dummy)
 
-    et = rbbt.join(s1, s3, dc.et_dummy)
+    et = avl.join(s1, s3, dc.et_dummy)
 
     return et
 
@@ -338,7 +334,7 @@ class DynamicConEdge:
 
 class DynamicCon:
 
-    def __init__(self, G, use_custom_max_level = False, custom_max_level = 0):
+    def __init__(self, G):
         # G is a networkx graph
         self.G = G
 
@@ -354,11 +350,8 @@ class DynamicCon:
         self.small_set = 16 * logn
         self.sample_size = 32 * logn * logn
         # this is l in the paper
-        if use_custom_max_level:
-            self.max_level = custom_max_level
-        else:
-            self.max_level = 6 * logn
-        #self.max_level = 0
+        self.max_level = 6 * logn
+        self.max_level = 0
         # counters for number of edges added to each level
         self.added_edges = [0 for _ in range(self.max_level + 1)]
         # rebuild bound of last level, double it as we go up levels
@@ -372,7 +365,7 @@ class DynamicCon:
 
 
         self.et_dummy = EulerTourTree(self, "Dummy")
-        self.ed_dummy = adt.AdjacencyRBBTree("Dummy")
+        self.ed_dummy = adt.AdjacencyAVLTree("Dummy")
         g_nodes = self.G.nodes
         for node in g_nodes:
             g_nodes[node]["data"] = DynamicConNode()
@@ -428,6 +421,7 @@ class DynamicCon:
         # create_tree_occ is to flag signifying if we need to construct list
         # tree_occ for the DynamicCon class
 
+        #print("edge:{} inserted into tree at level:{}".format(edge, i))
         #endpoints
         # source is smaller node
         if edge[0] < edge[1]:
@@ -451,12 +445,16 @@ class DynamicCon:
             et_link(source,target, edge, j, self)
         # edge now has pointer to DynamicCon's tree edges at level i,
         # and add edge to this list
+        # if not wavl.check_sub_tree_weights(self.G.nodes[source]["data"].active_occ[0].find_root()):
+        #     print("wrong subtree weights")
 
         self.tree_edges[i].append(edge)
 
     def delete_tree(self, edge):
         i = self.level(edge)
-        # print("edge:{} deleted from tree at level:{}".format(edge, i))
+
+        #print("edge:{} deleted from tree at level:{}".format(edge, i))
+
         # in all levels higher (sparser cuts) remove from EulerTourTree F_j
         for j in range(i, self.max_level + 1):
             et_cut(edge, j, self)
@@ -468,11 +466,10 @@ class DynamicCon:
         else:
             self.tree_edges[i].remove((edge[1], edge[0]))
 
-
     def insert_non_tree(self, edge, i):
 
         #set level of edge to i
-        # print("edge:{} inserted into non tree at level:{}".format(edge, i))
+        #print("edge:{} inserted into non tree at level:{}".format(edge, i))
         self.G.edges[edge]["data"].level = i
 
         # source is smaller node
@@ -523,7 +520,7 @@ class DynamicCon:
             target = edge[0]
 
         # remove edge from source and target adjacency trees
-        # print("edge:{} deleted at non tree at level:{}".format(edge, i))
+        #print("edge:{} deleted at non tree at level:{}".format(edge, i))
         self.G.nodes[source]["data"].adjacent_edges[i] = adt.adj_delete(self.G.nodes[source]["data"].adjacent_edges[i],
                                                                         self.G.edges[edge]["data"].non_tree_occ[0],
                                                                         self.ed_dummy)
@@ -565,19 +562,17 @@ class DynamicCon:
         rand_et_num = random.randint(1, tree_weight)
 
         # EulerTourTree node corresponding to our random number
-        et_node, offset = wrbbt.locate(et_tree, rand_et_num)
+        et_node, offset = wavl.locate(et_tree, rand_et_num)
 
         # get node
         u = et_node.node
 
         # get the AdjacencyTree node corresponding to returned offset
 
-        adj_node, _ = wrbbt.locate(self.G.nodes[u]["data"].adjacent_edges[i], offset)
+        adj_node, _ = wavl.locate(self.G.nodes[u]["data"].adjacent_edges[i], offset)
         edge = adj_node.edge
 
         v = edge[1] if (u == edge[0]) else edge[0]
-
-        # print("sample and test gave us edge:", edge)
 
         if self.connected(u,v,i):
             return None
@@ -592,7 +587,6 @@ class DynamicCon:
 
             i = self.level(edge)
 
-            # source is smaller node
             if edge[0] < edge[1]:
                 source = edge[0]
                 target = edge[1]
@@ -614,9 +608,6 @@ class DynamicCon:
             u = et_node.node
             # only look at active so we dont double count
             if et_node.active:
-                # print("Cut Edge node:{}", u)
-                # print("Node:{}, Adj:{}".format(et_node.node, self.G.nodes[u]["data"].adjacent_edges[level].in_order())
-                # if self.G.nodes[u]["data"].adjacent_edges[level] else "Node:{}, Adj:{}".format(et_node.node, None))
                 self.traverse_edges(self.G.nodes[u]["data"].adjacent_edges[level], edge_list)
             # traverse through all nodes in EulerTourTree
             self.get_cut_edges(et_node.child[LEFT], level, edge_list)
@@ -788,6 +779,7 @@ class DynamicCon:
             self.insert_tree(edge, self.max_level, True)
             self.added_edges[self.max_level] += 1
             self.rebuild(self.max_level)
+
         else:
             # binary search through levels
             curr_level = self.max_level // 2
@@ -810,36 +802,3 @@ class DynamicCon:
             self.rebuild(lower)
 
         return edge
-
-def test1():
-    G = nx.Graph()
-    for i in range(4):
-        G.add_node(i)
-    G.add_edge(0,1)
-    G.add_edge(0,3)
-    G.add_edge(0,2)
-    G.add_edge(3,2)
-    G.add_edge(3,1)
-    D = DynamicCon(G)
-    print("Current ETT:", D.G.nodes[0]["data"].active_occ[0].find_root().in_order())
-    print("Edge:{}, Tree Occ:{}".format((0,1), D.G.edges[(0,1)]["data"].tree_occ[0]))
-    print("Edge:{}, Tree Occ:{}".format((0,3), D.G.edges[(0,3)]["data"].tree_occ[0]))
-    print("Edge:{}, Tree Occ:{}".format((0,2), D.G.edges[(0,2)]["data"].tree_occ[0]))
-
-    D.del_edge((0,2))
-    print("Current ETT:", D.G.nodes[0]["data"].active_occ[0].find_root().in_order())
-
-
-def test2():
-    G = nx.Graph()
-    for i in range(3):
-        G.add_node(i)
-    G.add_edge(0,1)
-    G.add_edge(1,2)
-    p = DynamicCon(G)
-
-    print(str(treeToETList(p, G, i)))
-
-
-if __name__ == "__main__":
-    test1()

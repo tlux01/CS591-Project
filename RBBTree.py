@@ -5,7 +5,7 @@ LEFT = 0
 RIGHT = 1
 
 # Balance Binary Tree Class
-class BBTree:
+class RBBTree:
 
     def __init__(self):
         self.parent = None
@@ -159,7 +159,7 @@ class BBTree:
             accum = accum + self.child[RIGHT].in_order()
         return accum
 
-################### STATIC METHODS to operate on our BBTREE #########################
+################### STATIC METHODS to operate on our RBBTREE #########################
 # rotate a tree for balancing, does not change InOrder traversal of tree
 # rotate depends if child is left or right child of parent
 def rotate(r_child, r_parent):
