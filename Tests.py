@@ -393,7 +393,6 @@ def benchmark_and_save_old():
             np.save('data/benchmark_data/tBFS_from_{}_to_{}_nodes_5_query_freq'.format(ns[0], ns_so_far[-1]),
                     np.array(tBFS_times))
 
-
 def benchmark_DC_connected_method_k_times(k, DC):
     start = time()
     for i in range(k):
@@ -477,7 +476,6 @@ def benchmark_on_dataset(deletion_freq = 100, query_freq = 5):
 
     return ins_time_DC/(num_iterations), del_time_DC/(num_iterations/deletion_freq), query_time_DC/(num_iterations*query_freq), query_time_BFS/(num_iterations*query_freq)
 
-
 def benchmark_and_save_on_dataset_old():
     use_custom_max_level = True
     withBFS = True
@@ -502,7 +500,6 @@ def benchmark_and_save_on_dataset_old():
         plt.title("Dataset, 986 nodes, 100,000 edge ins, query freq from {} to {}".format(query_freqs_so_far[0], query_freqs_so_far[-1]))
         plt.savefig("data/plots/times_email_dataset_query_freq_from_{}_to_{}.png".format(query_freqs_so_far[0], query_freqs_so_far[-1]))
         plt.clf()
-
 
 def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL):
     # benchmark on graph G
@@ -537,8 +534,8 @@ def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL):
 
 def benchmark4(use_custom_max_level, n, max_level, withBFS, use_AVL):
     # graph creation:
-    #G = nx.disjoint_union(nx.complete_graph(int(n/2)), nx.complete_graph(int(n/2)))
-    G = nx.gnp_random_graph(n,2/n)
+    G = nx.disjoint_union(nx.complete_graph(int(n/2)), nx.complete_graph(int(n/2)))
+    #G = nx.gnp_random_graph(n,2/n)
     return benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL)
 
 def benchmark_and_save():
@@ -546,11 +543,11 @@ def benchmark_and_save():
     # tBFS = O(n + query freq)
     low_deg = 6
     high_deg = 15
-    use_custom_max_level = True
+    use_custom_max_level = False
     max_level = 0
     withBFS = True
-    #name_of_graph = "Kn_Kn_disjoint"
-    name_of_graph = "G_np"
+    name_of_graph = "Kn_Kn_disjoint"
+    #name_of_graph = "G_np"
 
     print("Running test until {} nodes".format(2**(high_deg-1)))
     ns = [2 ** k for k in range(low_deg, high_deg)]
@@ -570,7 +567,7 @@ def benchmark_and_save():
         else:
             ml = "6logn"
         labels = ["insertion", "deletion", "query DC", "query BFS"]
-        if (ns[i] >= 2**13):
+        if (ns[i] >= 2**11):
             ns_so_far = ns[:i + 1]
             for j in range(2):
                 marker = "D"
