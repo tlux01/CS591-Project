@@ -4,7 +4,8 @@ from random import sample, seed
 import random
 from time import time
 import copy
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 def mySample(s):
     return sample(s,1)[0]
@@ -199,7 +200,7 @@ def benchmark1():
     p = 2 / n
     num_iterations = 100
     query_frequency = 10
-    print("Running benchmark")
+    print("Running benchmark 1")
     print("number of nodes: {}\n"
           "number of edge additions and deletions: {}\n"
           "query frequency: {}\n".format(n, num_iterations, query_frequency))
@@ -248,12 +249,238 @@ def benchmark1():
             print("ERROR! THE TWO METHODS DO NOT AGREE!")
     return precompute_time, total_time_DC, total_time_BFS
 
-if __name__ == "__main__":
+def benchmark2(doPrinting = False):
+    n = 10000
+    p = 2 / n
+    num_iterations = 100
+    query_frequency = 5
+    if doPrinting:
+        print("Running benchmark 2")
+        print("number of nodes: {}\n"
+              "number of edge additions and deletions: {}\n"
+              "query frequency: {}\n".format(n, num_iterations, query_frequency))
+    total_time_DC = 0
+    total_time_BFS = 0
+    G = nx.gnp_random_graph(n, p)
+    H = copy.deepcopy(G) # keep H to be the same as G
+    precompute_start = time()
+    DC = DynamicCon(G)
+    precompute_end = time()
+    precompute_time = precompute_end - precompute_start
+
+    for i in range(num_iterations):
+        node1, node2 = sample(G.nodes, 2)
+        node3, node4 = mySample(G.edges)
+
+        # DC:
+        start = time()
+        DC.ins(node1, node2)
+        DC.del_edge((node3, node4))
+        for j in range(query_frequency):
+            node5, node6 = sample(G.nodes, 2)
+            c1 = DC.connected(node5, node6)
+        end = time()
+        total_time_DC += end - start
+
+        # BFS:
+        start = time()
+        H.add_edge(node1, node2)
+        H.remove_edge(node3, node4)
+        for j in range(query_frequency):
+            node5, node6 = sample(G.nodes, 2)
+            c2 = areConnected(H, node5, node6)
+        end = time()
+        total_time_BFS += end - start
+
+    return precompute_time, total_time_DC, total_time_BFS
+
+def benchmark3(use_custom_max_level = True, n = 10**3, query_frequency = 5, max_level = 0, doPrinting = True, withBFS = False):
+    # n = number of nodes
+    # query_frequency = number of queries per edge addition, deletion
+    # max_level = max_level for the DC data structure
+    p = 2 / n
+    num_iterations = 100
+    if doPrinting:
+        print("Running benchmark 3")
+        print("number of nodes: {}\n"
+              "query frequency: {}\n".format(n, query_frequency))
+    total_time_DC = 0
+    total_time_BFS = 0
+    G = nx.gnp_random_graph(n, p)
+    print("G has {} CC's".format(nx.number_connected_components(G)))
+    precompute_start = time()
+    DC = DynamicCon(G, use_custom_max_level, max_level)
+    precompute_end = time()
+    precompute_time = precompute_end - precompute_start
+
+    for i in range(num_iterations):
+        node1, node2 = sample(G.nodes, 2)
+        node3, node4 = mySample(G.edges)
+
+        # DC:
+        start = time()
+        DC.ins(node1, node2)
+        DC.del_edge((node3, node4))
+        for j in range(query_frequency):
+            node5, node6 = sample(G.nodes, 2)
+            DC.connected(node5, node6)
+        end = time()
+        total_time_DC += end - start
+
+        #BFS
+        if withBFS:
+            start = time()
+            for j in range(query_frequency):
+                node5, node6 = sample(G.nodes, 2)
+                areConnected(G, node5, node6)
+            end = time()
+            total_time_BFS += end - start
+    return precompute_time, total_time_DC, total_time_BFS
+
+def benchmark_and_save():
+    # tDC = O(log(n) + query_freq + ?(max_level))
+    # tBFS = O(n + query freq)
+    low_deg = 5
+    high_deg = 17
+    use_custom_max_level = True
+    withBFS = False
+    print("Running test until {} nodes".format(2**(high_deg-1)))
+    ns = [2 ** k for k in range(low_deg, high_deg)]
+    tDC_times = []
+    precompute_times = []
+    tBFS_times = []
+    for i in range(len(ns)):
+        print("Benchmarking with {} nodes".format(ns[i]))
+        precompute, tDC, tBFS = benchmark3(use_custom_max_level= use_custom_max_level, n=ns[i], max_level=0, withBFS=withBFS, doPrinting=False)
+        tDC_times.append(tDC)
+        precompute_times.append(precompute)
+        tBFS_times.append(tBFS)
+
+        if (ns[i] >= 2**12):
+            marker = "D"
+            plt.figure(1) # for ordinary axis
+            ns_so_far = ns[:i+1]
+            #plt.plot(ns_so_far, precompute_times, label = "precompute", marker = marker)
+            plt.plot(ns_so_far, tDC_times, label="DC time", marker = marker)
+            if withBFS:
+                plt.plot(ns_so_far, tBFS_times, label="BFS time", marker = marker)
+            plt.legend()
+            plt.xlabel("number of nodes (n)")
+            plt.ylabel("time in seconds")
+            plt.title("G(n,2/n), 100 edge insertions/deletions, 500 queries, n from {} to {}".format(ns[0], ns[i]))
+            plt.savefig("data/plots/tDC_times_nodes_from_{}_to_{}_max_level_{}.png".format(ns[0],ns[i], 0))
+            plt.clf()
+
+            plt.figure(2)  # for log axis
+            #plt.plot(ns_so_far, precompute_times, label="precompute", marker=marker)
+            plt.plot(ns_so_far, tDC_times, label="DC time", marker=marker)
+            if withBFS:
+                plt.plot(ns_so_far, tBFS_times, label="BFS time", marker=marker)
+            plt.xscale("log")
+            #plt.yscale("log")
+            plt.legend()
+            plt.xlabel("number of nodes (n)")
+            plt.ylabel("time in seconds")
+            plt.title("Log scale. G(n,2/n), 100 ins/del, 500 queries, n from {} to {}".format(ns[0], ns[i]))
+            plt.savefig("data/plots/log_scale_tDC_times_nodes_from_{}_to_{}_max_level_{}.png".format(ns[0], ns[i], 0))
+            plt.clf()
+
+    # np.save('data/benchmark_data/precompute_times_from_{}_to_{}_nodes_5_query_freq'.format(ns[0], ns[-1]),
+    #         precompute_times)
+    # np.save('data/benchmark_data/tDC_from_{}_to_{}_nodes_5_query_freq'.format(ns[0], ns[-1]),
+    #         tDC_times)
+    # np.save('data/benchmark_data/tBFS_from_{}_to_{}_nodes_5_query_freq'.format(ns[0], ns[-1]),
+    #         tBFS_times)
+
+
+def benchmark_DC_connected_method_k_times(k, DC):
     start = time()
-    precompute, tDC, tBFS = benchmark1()
+    for i in range(k):
+        node1, node2 = sample(DC.G.nodes, 2)
+        DC.connected(node1, node2)
     end = time()
-    print("The benchmark took {} seconds.".format(end - start))
-    print("Time to build the dynamic data structure: {} seconds\n"
-          "total time DC took: {} seconds\n"
-          "total time BFS took: {} seconds".format(precompute, tDC, tBFS))
+    return end - start
+
+def benchmark_BFS_connected_method_k_times(k, G):
+    start = time()
+    for i in range(k):
+        node1, node2 = sample(G.nodes, 2)
+        areConnected(G,node1, node2)
+    end = time()
+    return end - start
+
+def delete_random_edge(DC):
+    node3, node4 = mySample(DC.G.edges)
+    DC.del_edge((node3, node4))
+
+def benchmark_on_dataset(deletion_freq = 10, query_freq = 5):
+    f = open("data/dataset.txt","r")
+    lines = f.readlines()
+    f.close()
+
+    nodes = []
+    edges = []
+    for line in lines:
+        sp = line.split(" ")
+        sp[-1] = sp[-1][:-1]
+        ev = [eval(k) for k in sp]
+        node1, node2, t = ev
+        edges.append((node1, node2))
+        nodes.append(node1)
+        nodes.append(node2)
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+    print("There are {} nodes".format(len(G.nodes)))
+    DC = DynamicCon(G, True, 0)
+
+    total_time_DC = 0
+    total_time_BFS = 0
+
+    for i in range(len(edges)):
+        start = time()
+        DC.ins(edges[i][0],edges[i][1])
+        if i%deletion_freq == 0:
+            delete_random_edge(DC)
+        benchmark_DC_connected_method_k_times(query_freq, DC)
+        end = time()
+        total_time_DC += end - start
+
+        total_time_BFS += benchmark_BFS_connected_method_k_times(query_freq, G)
+
+    return total_time_DC, total_time_BFS
+
+def benchmark_and_save_on_dataset():
+    use_custom_max_level = True
+    withBFS = True
+    tDC_times = []
+    tBFS_times = []
+    query_freqs = range(1,10)
+    for i in range(len(query_freqs)):
+        print("Benchmarking with {} query frequency".format(query_freqs[i]))
+        tDC, tBFS = benchmark_on_dataset(query_freq = query_freqs[i])
+        tDC_times.append(tDC)
+        tBFS_times.append(tBFS)
+
+    marker = "D"
+    plt.figure(1)  # for ordinary axis
+    plt.plot(query_freqs, tDC_times, label="DC time", marker=marker)
+    if withBFS:
+        plt.plot(query_freqs, tBFS_times, label="BFS time", marker=marker)
+    plt.legend()
+    plt.xlabel("query frequency")
+    plt.ylabel("time in seconds")
+    plt.title("Dataset, 986 nodes, >300,000 edge ins, query freq from {} to {}".format(query_freqs[0], query_freqs[-1]))
+    plt.savefig("data/plots/times_email_dataset_query_freq_from_{}_to_{}.png".format(query_freqs[0], query_freqs[-1]))
+    plt.clf()
+
+if __name__ == "__main__":
+    real_dataset = False
+
+    start = time()
+    if real_dataset:
+        benchmark_and_save_on_dataset()
+    else:
+        benchmark_and_save()
+    end = time()
+    print("The test took {} seconds".format(end - start))
     print("Done")

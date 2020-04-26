@@ -377,7 +377,7 @@ class DynamicConEdge:
 
 class DynamicCon:
 
-    def __init__(self, G):
+    def __init__(self, G, use_custom_max_level = False, custom_max_level = 0):
         # G is a networkx graph
         self.G = G
 
@@ -393,7 +393,10 @@ class DynamicCon:
         self.small_set = 16 * logn
         self.sample_size = 32 * logn * logn
         # this is l in the paper
-        self.max_level = 6 * logn
+        if use_custom_max_level:
+            self.max_level = custom_max_level
+        else:
+            self.max_level = 6 * logn
         #self.max_level = 0
         # counters for number of edges added to each level
         self.added_edges = [0 for _ in range(self.max_level + 1)]
