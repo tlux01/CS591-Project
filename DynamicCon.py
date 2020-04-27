@@ -324,7 +324,7 @@ class DynamicConEdge:
     def __init__(self):
         self.level = None
 
-        # points to the two ed_nodes corresponding to this edge, are
+        # points to the two AdjacencyTree nodes corresponding to this edge, are
         # none if this is a tree edge, 0th index is source of edge, 1st
         # index is target of edge
         self.non_tree_occ = [None, None]
@@ -742,6 +742,7 @@ class DynamicCon:
                         self.rebuild(i+1)
                     else:
                         self.insert_tree(reconnect_edge, i, True)
+
     # function user can call to delete an edge in our graph G
     def del_edge(self, edge):
         # don't wanna try to delete a non-existing edge
@@ -810,36 +811,3 @@ class DynamicCon:
             self.rebuild(lower)
 
         return edge
-
-def test1():
-    G = nx.Graph()
-    for i in range(4):
-        G.add_node(i)
-    G.add_edge(0,1)
-    G.add_edge(0,3)
-    G.add_edge(0,2)
-    G.add_edge(3,2)
-    G.add_edge(3,1)
-    D = DynamicCon(G)
-    print("Current ETT:", D.G.nodes[0]["data"].active_occ[0].find_root().in_order())
-    print("Edge:{}, Tree Occ:{}".format((0,1), D.G.edges[(0,1)]["data"].tree_occ[0]))
-    print("Edge:{}, Tree Occ:{}".format((0,3), D.G.edges[(0,3)]["data"].tree_occ[0]))
-    print("Edge:{}, Tree Occ:{}".format((0,2), D.G.edges[(0,2)]["data"].tree_occ[0]))
-
-    D.del_edge((0,2))
-    print("Current ETT:", D.G.nodes[0]["data"].active_occ[0].find_root().in_order())
-
-
-def test2():
-    G = nx.Graph()
-    for i in range(3):
-        G.add_node(i)
-    G.add_edge(0,1)
-    G.add_edge(1,2)
-    p = DynamicCon(G)
-
-    print(str(treeToETList(p, G, i)))
-
-
-if __name__ == "__main__":
-    test1()

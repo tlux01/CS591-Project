@@ -26,6 +26,7 @@ class WAVLTree(AVLTree):
             aux = aux.parent
     def add_weight(self, a):
         self.set_weight(self.weight+a)
+
     # these functions fix the weights
     def update_subtree_weight(self):
         self.sub_tree_weight = self.weight
@@ -33,6 +34,7 @@ class WAVLTree(AVLTree):
             self.sub_tree_weight += self.child[LEFT].sub_tree_weight
         if self.child[RIGHT]:
             self.sub_tree_weight += self.child[RIGHT].sub_tree_weight
+
     def after_rot(self):
         #print('After Rot')
         self.parent.sub_tree_weight = self.sub_tree_weight
@@ -43,9 +45,8 @@ class WAVLTree(AVLTree):
             self.sub_tree_weight += left.sub_tree_weight
         if right:
             self.sub_tree_weight += right.sub_tree_weight
-        #bbt.print_tree(self.find_root())
+
     def init(self):
-        #print("Within Init:", self)
         self.sub_tree_weight = self.weight
         left = self.child[LEFT]
         right = self.child[RIGHT]
@@ -53,6 +54,7 @@ class WAVLTree(AVLTree):
             self.sub_tree_weight += left.sub_tree_weight
         if right:
             self.sub_tree_weight += right.sub_tree_weight
+
     def isolate(self):
         aux = self.parent
         while(aux):
@@ -84,6 +86,7 @@ def check_sub_tree_weights(root):
     else:
         r = root.sub_tree_weight == root.weight
         return r
+        
 # return the node of tree t that corresponds to w wrt In-order
 def locate(t, w):
 

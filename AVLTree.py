@@ -66,7 +66,7 @@ class AVLTree:
 
         # remove children
         self.child
-        
+
     # find successor in InOrder Traversal of InOrder
     # returns this node if exists, None otherwise
     def successor(self):
@@ -164,6 +164,7 @@ class AVLTree:
     def init(self):
         pass
 
+    # finds child with larger height
     def tallerChild(self):
         left_h = -1
         right_h = -1
@@ -209,8 +210,9 @@ class AVLTree:
             aux.height = max(right_h, left_h) + 1
             aux = aux.parent
 
+# split is same as in RBBTREE, but with additional rebalancing of new tree
 def split(start_node, direction, dummy):
-    #print("splitting")
+
     if not start_node:
         t1 = None
         t2 = None
@@ -290,6 +292,7 @@ def split(start_node, direction, dummy):
         t2 = t2.find_root()
 
     return t1, t2
+
 def smaller(u, v):
     # if u or v = None
     if not u or not v:
@@ -369,6 +372,7 @@ def join(t1, t2, dummy):
             return None
     dummy.init()
 
+    # figure out heights of two trees
     if t1.height > t2.height + 1:
         joinRight(t1, t2, dummy)
     elif t2.height > t1.height + 1:
@@ -381,12 +385,13 @@ def join(t1, t2, dummy):
         t2.parent = dummy
         dummy.update_height()
 
-
+    # we want to remove dummy node, keeping balance intact
     delete_dummy(dummy)
 
     return t1.find_root()
 
-#delete node from the tree it belongs to
+# delete node from the tree it belongs to, handling appropriate rebalancing
+# after the deletion
 def delete_dummy(dummy):
     if not dummy.child[LEFT] and not dummy.child[RIGHT]:
         parent = dummy.parent
@@ -463,6 +468,7 @@ def delete_dummy(dummy):
 
 
 def rebalance(parent):
+    # rebalance the tree moving up the tree until it is fully balanced
     while (parent):
         if abs(parent.compute_balance_factor()) > 1:
             x = parent
@@ -474,24 +480,30 @@ def rebalance(parent):
         parent = parent.parent
 
 def trinode_restructure(x,y,z):
+    # figure out the four possible cases for the rotation
     zLeft = (z is y.child[LEFT])
     yLeft = (y is x.child[LEFT])
 
+    # Left configuration
     if zLeft and yLeft:
         rotate(x, RIGHT)
         return y
+    # Left Right configuration
     elif not zLeft and yLeft:
         rotate(y, LEFT)
         rotate(x, RIGHT)
         return y
+    # Right Left configuration
     elif zLeft and not yLeft:
         rotate(y, RIGHT)
         rotate(x, LEFT)
         return y
+    # Right configurationhah
     else:
         rotate(x, LEFT)
         return y
 
+# helper function for joining AVL tree where the right tree has smaller height
 def joinRight(t1, t2, dummy):
     t1_left = t1.child[LEFT]
     t1_right = t1.child[RIGHT]
@@ -538,6 +550,7 @@ def joinRight(t1, t2, dummy):
         else:
             return rotate(t1, LEFT)
 
+# helper function for joining AVL tree where the left tree has smaller height
 def joinLeft(t1, t2, dummy):
     t2_left = t2.child[LEFT]
     t2_right = t2.child[RIGHT]
