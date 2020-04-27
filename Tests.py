@@ -534,8 +534,8 @@ def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL):
 
 def benchmark4(use_custom_max_level, n, max_level, withBFS, use_AVL):
     # graph creation:
-    G = nx.disjoint_union(nx.complete_graph(int(n/2)), nx.complete_graph(int(n/2)))
-    #G = nx.gnp_random_graph(n,2/n)
+    #G = nx.disjoint_union(nx.complete_graph(int(n/2)), nx.complete_graph(int(n/2)))
+    G = nx.gnp_random_graph(n,2/n)
     return benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL)
 
 def benchmark_and_save():
@@ -546,8 +546,8 @@ def benchmark_and_save():
     use_custom_max_level = False
     max_level = 0
     withBFS = True
-    name_of_graph = "Kn_Kn_disjoint"
-    #name_of_graph = "G_np"
+    #name_of_graph = "Kn_Kn_disjoint"
+    name_of_graph = "G_np"
 
     print("Running test until {} nodes".format(2**(high_deg-1)))
     ns = [2 ** k for k in range(low_deg, high_deg)]
