@@ -24,6 +24,7 @@ class WRBBTree(RBBTree):
         while(aux):
             aux.sub_tree_weight += w_diff
             aux = aux.parent
+
     def add_weight(self, a):
         self.set_weight(self.weight+a)
 
@@ -40,7 +41,6 @@ class WRBBTree(RBBTree):
             self.sub_tree_weight += right.sub_tree_weight
 
     def init(self):
-        #print("Within Init:", self)
         self.sub_tree_weight = self.weight
         left = self.child[LEFT]
         right = self.child[RIGHT]

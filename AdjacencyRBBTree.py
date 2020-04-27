@@ -14,10 +14,6 @@ class AdjacencyRBBTree(WRBBTree):
         self.edge = e
 
     def __repr__(self):
-        # return "{} , parent: {}, children: [{},{}] |".format(self.edge,
-        #                                             self.parent.edge if self.parent else "None",
-        #                                             self.child[BBTree.LEFT].edge if self.child[BBTree.LEFT] else "None" ,
-        #                                             self.child[BBTree.RIGHT].edge if self.child[BBTree.RIGHT] else "None")
         return "{}".format(self.edge)
 
 
