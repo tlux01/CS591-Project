@@ -501,7 +501,7 @@ def benchmark_and_save_on_dataset_old():
         plt.savefig("data/plots/times_email_dataset_query_freq_from_{}_to_{}.png".format(query_freqs_so_far[0], query_freqs_so_far[-1]))
         plt.clf()
 
-def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL):
+def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL, do_printing):
     # benchmark on graph G
     # return average time for insertion, deletion, query, BFS query, and precompute time
     num_iterations = 50
@@ -510,7 +510,8 @@ def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL):
     query_time_DC = 0
     query_time_BFS = 0
     precompute_time = 0
-    # print("G has {} CC's".format(nx.number_connected_components(G)))
+    if do_printing:
+        print("G has {} CC's".format(nx.number_connected_components(G)))
     precompute_start = time()
     DC = DynamicCon(nx.empty_graph()) # for scope
     if use_AVL:
@@ -521,6 +522,9 @@ def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL):
     precompute_time += precompute_end - precompute_start
     num_ins = 10
     num_q = 10
+    if do_printing:
+        print("Took {:0.5f} seconds to precompute the Dynamic Connectivity data structure".format(precompute_time))
+        print("Will do {} random edge deletions, {} random edge insertions, and {} random \"connected(a,b)\" queries".format(num_iterations, num_iterations*num_ins, num_iterations*num_q))
     for i in range(num_iterations):
         # DC:
         ins_time_DC += benchmark_DC_ins_method_k_times(num_ins,DC)
@@ -530,13 +534,20 @@ def benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL):
         # BFS
         if withBFS:
             query_time_BFS += benchmark_BFS_connected_method_k_times(1,G)
+    r = [ins_time_DC/(num_iterations*num_ins), del_time_DC/num_iterations, query_time_DC/(num_iterations*num_q), query_time_BFS/num_iterations, precompute_time]
+    r = [k*1000 for k in r]
+    if do_printing:
+        print("The average times in miliseconds on your machine are:")
+        print("{:.5f} -- edge insertion\n{:.5f} -- edge deletion\n{:.5f} -- query using the data structure\n{:.5f} -- query using BFS.".format(r[0],r[1],r[2],r[3]))
     return ins_time_DC/(num_iterations*num_ins), del_time_DC/num_iterations, query_time_DC/(num_iterations*num_q), query_time_BFS/num_iterations, precompute_time
 
-def benchmark4(use_custom_max_level, n, max_level, withBFS, use_AVL):
+def benchmark4(use_custom_max_level, n, max_level, withBFS, use_AVL, do_printing = False):
     # graph creation:
     #G = nx.disjoint_union(nx.complete_graph(int(n/2)), nx.complete_graph(int(n/2)))
     G = nx.gnp_random_graph(n,2/n)
-    return benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL)
+    if do_printing:
+        print("Running a benchmark on G_n,p with n = {}, p = n/2".format(n))
+    return benchmark_on_graph(G, use_custom_max_level, max_level, withBFS, use_AVL, do_printing)
 
 def benchmark_and_save():
     # tDC = O(log(n) + query_freq + ?(max_level))
